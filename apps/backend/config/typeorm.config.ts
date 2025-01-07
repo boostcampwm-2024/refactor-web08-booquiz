@@ -12,16 +12,16 @@ export class TypeormConfig implements TypeOrmOptionsFactory {
     createTypeOrmOptions(): TypeOrmModuleOptions {
         const env = this.configService.get<Environment>('env');
 
-        if(env === 'DEV') {
-
-            return {
-                type: 'sqlite',
-                database: ':booquiz',
-                entities: [Quiz, QuizSet],
-                synchronize: true,
-                logging: ['query'],
-            }
-        }
+        // if(env === 'DEV') {
+        //
+        //     return {
+        //         type: 'sqlite',
+        //         database: ':booquiz',
+        //         entities: [Quiz, QuizSet],
+        //         synchronize: true,
+        //         logging: ['query'],
+        //     }
+        // }
 
         return {
             type: 'mysql',
