@@ -134,7 +134,8 @@ jobs:
                     EOL
 
                     # Docker 네트워크 생성 (없는 경우)
-                    sudo docker network create booquiz || true
+                    # sudo docker network create booquiz || true
+                    cat .env
 
                     # 서비스 재시작
                     sudo docker-compose pull
