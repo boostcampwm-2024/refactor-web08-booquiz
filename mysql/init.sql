@@ -3,16 +3,10 @@ SET NAMES utf8mb4;
 SET character_set_client = utf8mb4;
 SET character_set_results = utf8mb4;
 SET character_set_connection = utf8mb4;
-ALTER DATABASE ${MYSQL_DATABASE} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE booquiz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- 데이터베이스가 없는 경우에만 생성
-CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
-USE ${MYSQL_DATABASE};
-
--- 사용자가 없는 경우에만 생성
-CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
-FLUSH PRIVILEGES;
+-- 데이터베이스 사용
+USE booquiz;
 
 -- quiz_set 테이블 생성
 CREATE TABLE IF NOT EXISTS quiz_set (
