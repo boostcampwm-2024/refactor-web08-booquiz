@@ -64,8 +64,9 @@ services:
             MYSQL_USER: ${DB_USERNAME}
             MYSQL_PASSWORD: ${DB_PASSWORD}
         volumes:
-            - mysql_data:/var/lib/mysql
-            - ./mysql:/docker-entrypoint-initdb.d
+          - mysql_data:/var/lib/mysql
+          - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
         expose:
             - '3306'
         networks:
