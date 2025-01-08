@@ -106,7 +106,7 @@ jobs:
                   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
                   DB_DATABASE: ${{ secrets.DB_DATABASE }}
                   DB_SYNCHRONIZE: ${{ secrets.DB_SYNCHRONIZE }}
-                  MYSQL_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+                  MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
               run: |
                   # 배포 디렉토리 생성
                   ssh -i ~/.ssh/id_rsa ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }} "mkdir -p ~/booquiz"
