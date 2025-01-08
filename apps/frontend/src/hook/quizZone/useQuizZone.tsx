@@ -256,7 +256,7 @@ const useQuizZone = (
         handleClose?.();
     };
 
-    const wsUrl = `${import.meta.env.VITE_WS_URL}/play`;
+    const wsUrl = `/api/play`;
     const { beginConnection, sendMessage, closeConnection } = useWebSocket({
         wsUrl,
         messageHandler,
