@@ -114,23 +114,11 @@ jobs:
                   # 필요한 파일들을 서버로 복사
                   scp -i ~/.ssh/id_rsa docker-compose.yml ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }}:~/booquiz/
                   scp -i ~/.ssh/id_rsa -r nginx ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }}:~/booquiz/
+                  scp -i ~/.ssh/id_rsa -r mysql ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }}:~/booquiz/
 
                   # 환경 변수 파일 생성 및 서비스 배포
                   ssh -i ~/.ssh/id_rsa ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }} "
                   cd ~/booquiz
-
-                  # mysql 디렉토리와 init.sql 생성
-                  mkdir -p mysql
-                  cat > mysql/init.sql << 'EOL'
-                  -- 문자셋 설정
-                  ALTER DATABASE \`${DB_DATABASE}\`
-                  CHARACTER SET = utf8mb4
-                  COLLATE = utf8mb4_unicode_ci;
-
-                  -- 권한 설정
-                  GRANT ALL PRIVILEGES ON \`${DB_DATABASE}\`.* TO '${DB_USERNAME}'@'%';
-                  FLUSH PRIVILEGES;
-                  EOL
 
                   cat > .env << EOL
                   DOCKER_USERNAME=$DOCKER_USERNAME
