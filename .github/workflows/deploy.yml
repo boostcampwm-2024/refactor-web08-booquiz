@@ -1,137 +1,144 @@
 name: Deploy Application
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/**'
-      - 'docker-compose.yml'
-      - 'nginx/**'
+    push:
+        branches: [main]
+        paths:
+            - 'apps/**'
+            - 'docker-compose.yml'
+            - 'nginx/**'
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    name: Run Tests
-    environment: ${{'prod'}}
+    test:
+        runs-on: ubuntu-latest
+        name: Run Tests
+        environment: ${{'prod'}}
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'node'
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 'node'
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+            - name: Install pnpm
+              run: npm install -g pnpm
 
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --no-frozen-lockfile
 
-      - name: Test backend
-        working-directory: apps/backend
-        run: pnpm test
+            - name: Test backend
+              working-directory: apps/backend
+              run: pnpm test
 
-      - name: Test frontend
-        working-directory: apps/frontend
-        run: pnpm test
+            - name: Test frontend
+              working-directory: apps/frontend
+              run: pnpm test
 
-  build-and-push:
-    needs: test
-    runs-on: ubuntu-latest
-    name: Build and Push Docker Images
-    environment: ${{'prod'}}
+    build-and-push:
+        needs: test
+        runs-on: ubuntu-latest
+        name: Build and Push Docker Images
+        environment: ${{'prod'}}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v2
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+            - name: Install Docker Compose # 추가된 부분
+              run: |
+                  DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+                  mkdir -p $DOCKER_CONFIG/cli-plugins
+                  curl -SL https://github.com/docker/compose/releases/download/v2.24.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+                  chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
-      - name: Build and push with Docker Compose
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_TAG: ${{ secrets.DOCKER_TAG }}
-          NODE_ENV: ${{ secrets.NODE_ENV }}
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          DB_SYNCHRONIZE: ${{ secrets.DB_SYNCHRONIZE }}
-          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
-        run: |
-          docker-compose build
-          docker-compose push
+            - name: Log in to Docker Hub
+              uses: docker/login-action@v2
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    name: Deploy to Server
-    environment: ${{'prod'}}
+            - name: Build and push with Docker Compose
+              env:
+                  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+                  DOCKER_TAG: ${{ secrets.DOCKER_TAG }}
+                  NODE_ENV: ${{ secrets.NODE_ENV }}
+                  SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+                  DB_PORT: ${{ secrets.DB_PORT }}
+                  DB_USERNAME: ${{ secrets.DB_USERNAME }}
+                  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+                  DB_DATABASE: ${{ secrets.DB_DATABASE }}
+                  DB_SYNCHRONIZE: ${{ secrets.DB_SYNCHRONIZE }}
+                  DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+              run: |
+                  docker-compose build
+                  docker-compose push
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    deploy:
+        needs: build-and-push
+        runs-on: ubuntu-latest
+        name: Deploy to Server
+        environment: ${{'prod'}}
 
-      - name: Set up SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PUBLIC_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -t rsa ${{ secrets.PUBLIC_SERVER_IP }} >> ~/.ssh/known_hosts
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Deploy to server
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_TAG: ${{ secrets.DOCKER_TAG }}
-          NODE_ENV: ${{ secrets.NODE_ENV }}
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          DB_SYNCHRONIZE: ${{ secrets.DB_SYNCHRONIZE }}
-          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
-        run: |
-          # 배포 디렉토리 생성
-          ssh -i ~/.ssh/id_rsa ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }} "mkdir -p ~/booquiz"
+            - name: Set up SSH Key
+              run: |
+                  mkdir -p ~/.ssh
+                  echo "${{ secrets.PUBLIC_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+                  chmod 600 ~/.ssh/id_rsa
+                  ssh-keyscan -t rsa ${{ secrets.PUBLIC_SERVER_IP }} >> ~/.ssh/known_hosts
 
-          # 필요한 파일들을 서버로 복사
-          scp -i ~/.ssh/id_rsa docker-compose.yml ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }}:~/booquiz/
-          scp -i ~/.ssh/id_rsa -r nginx ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }}:~/booquiz/
+            - name: Deploy to server
+              env:
+                  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+                  DOCKER_TAG: ${{ secrets.DOCKER_TAG }}
+                  NODE_ENV: ${{ secrets.NODE_ENV }}
+                  SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+                  DB_PORT: ${{ secrets.DB_PORT }}
+                  DB_USERNAME: ${{ secrets.DB_USERNAME }}
+                  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+                  DB_DATABASE: ${{ secrets.DB_DATABASE }}
+                  DB_SYNCHRONIZE: ${{ secrets.DB_SYNCHRONIZE }}
+                  DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+              run: |
+                  # 배포 디렉토리 생성
+                  ssh -i ~/.ssh/id_rsa ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }} "mkdir -p ~/booquiz"
 
-          # 환경 변수 파일 생성 및 서비스 배포
-          ssh -i ~/.ssh/id_rsa ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }} "
-            cd ~/booquiz
-          
-            # 환경 변수 파일 생성
-            cat > .env << EOL
-            DOCKER_USERNAME=$DOCKER_USERNAME
-            DOCKER_TAG=$DOCKER_TAG
-            NODE_ENV=$NODE_ENV
-            SESSION_SECRET=$SESSION_SECRET
-            DB_PORT=$DB_PORT
-            DB_USERNAME=$DB_USERNAME
-            DB_PASSWORD=$DB_PASSWORD
-            DB_DATABASE=$DB_DATABASE
-            DB_SYNCHRONIZE=$DB_SYNCHRONIZE
-            DB_ROOT_PASSWORD=$DB_ROOT_PASSWORD
-            EOL
+                  # 필요한 파일들을 서버로 복사
+                  scp -i ~/.ssh/id_rsa docker-compose.yml ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }}:~/booquiz/
+                  scp -i ~/.ssh/id_rsa -r nginx ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }}:~/booquiz/
 
-            # Docker 네트워크 생성 (없는 경우)
-            sudo docker network create booquiz || true
+                  # 환경 변수 파일 생성 및 서비스 배포
+                  ssh -i ~/.ssh/id_rsa ${{ secrets.DEPLOY_USER }}@${{ secrets.PUBLIC_SERVER_IP }} "
+                    cd ~/booquiz
 
-            # 서비스 재시작
-            sudo docker-compose pull
-            sudo docker-compose up -d
-            sudo docker image prune -f
-          "
+                    # 환경 변수 파일 생성
+                    cat > .env << EOL
+                    DOCKER_USERNAME=$DOCKER_USERNAME
+                    DOCKER_TAG=$DOCKER_TAG
+                    NODE_ENV=$NODE_ENV
+                    SESSION_SECRET=$SESSION_SECRET
+                    DB_PORT=$DB_PORT
+                    DB_USERNAME=$DB_USERNAME
+                    DB_PASSWORD=$DB_PASSWORD
+                    DB_DATABASE=$DB_DATABASE
+                    DB_SYNCHRONIZE=$DB_SYNCHRONIZE
+                    DB_ROOT_PASSWORD=$DB_ROOT_PASSWORD
+                    EOL
+
+                    # Docker 네트워크 생성 (없는 경우)
+                    sudo docker network create booquiz || true
+
+                    # 서비스 재시작
+                    sudo docker-compose pull
+                    sudo docker-compose up -d
+                    sudo docker image prune -f
+                  "
