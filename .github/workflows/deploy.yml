@@ -120,22 +120,22 @@ jobs:
                     cd ~/booquiz
 
                     # 환경 변수 파일 생성
-                    cat > .env << EOL
-                    DOCKER_USERNAME=$DOCKER_USERNAME
-                    DOCKER_TAG=$DOCKER_TAG
-                    NODE_ENV=$NODE_ENV
-                    SESSION_SECRET=$SESSION_SECRET
-                    DB_PORT=$DB_PORT
-                    DB_USERNAME=$DB_USERNAME
-                    DB_PASSWORD=$DB_PASSWORD
-                    DB_DATABASE=$DB_DATABASE
-                    DB_SYNCHRONIZE=$DB_SYNCHRONIZE
-                    DB_ROOT_PASSWORD=$DB_ROOT_PASSWORD
-                    EOL
+                    # cat > .env << EOL
+                    # DOCKER_USERNAME=$DOCKER_USERNAME
+                    # DOCKER_TAG=$DOCKER_TAG
+                    # NODE_ENV=$NODE_ENV
+                    # SESSION_SECRET=$SESSION_SECRET
+                    # DB_PORT=$DB_PORT
+                    # DB_USERNAME=$DB_USERNAME
+                    # DB_PASSWORD=$DB_PASSWORD
+                    # DB_DATABASE=$DB_DATABASE
+                    # DB_SYNCHRONIZE=$DB_SYNCHRONIZE
+                    # DB_ROOT_PASSWORD=$DB_ROOT_PASSWORD
+                    # EOL
 
                     # Docker 네트워크 생성 (없는 경우)
                     # sudo docker network create booquiz || true
-                    cat .env
+                    # cat .env
 
                     # 서비스 재시작
                     sudo docker-compose pull
