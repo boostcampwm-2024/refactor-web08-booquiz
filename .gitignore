@@ -383,3 +383,15 @@ sketch
 
 # End of https://www.toptal.com/developers/gitignore/api/dotenv,intellij,webstorm,node,yarn,visualstudiocode,react
 .env.*
+
+# Turborepo
+.turbo
+
+# Cache
+.cache
+.mf
+.rollup.cache
+tsconfig.tsbuildinfo
+
+# Builds
+dist/
