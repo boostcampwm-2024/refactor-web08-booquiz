@@ -4,11 +4,20 @@
         "jsx": "react",
         "baseUrl": ".",
         "paths": {
-            "@/*": ["./src/*"]
+            "@/*": ["./src/*"],
+            "@shared/*": ["../shared/src/*"]
         },
         "types": ["vitest/globals", "@testing-library/jest-dom"],
-        "lib": ["webworker", "es2015"]
+        "lib": ["webworker", "es2015"],
+        "declaration": true, // .d.ts 파일 생성 활성화
+        "declarationDir": "dist", // 선언 파일을 dist 디렉토리에 생성
+        "outDir": "dist",
+        "emitDeclarationOnly": true
     },
     "files": [],
-    "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
+    "references": [
+        { "path": "./tsconfig.app.json" },
+        { "path": "./tsconfig.node.json" },
+        { "path": "../../packages/shared" }
+    ]
 }
