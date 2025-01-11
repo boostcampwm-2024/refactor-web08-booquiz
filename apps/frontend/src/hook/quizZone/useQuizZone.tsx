@@ -256,7 +256,7 @@ const useQuizZone = (
         handleClose?.();
     };
 
-    const wsUrl = `/api/play`;
+    const wsUrl = `/ws/play`;
     const { beginConnection, sendMessage, closeConnection } = useWebSocket({
         wsUrl,
         messageHandler,
