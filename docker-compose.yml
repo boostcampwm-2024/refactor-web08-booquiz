@@ -47,10 +47,13 @@ services:
                 - DB_PASSWORD=${DB_PASSWORD}
                 - DB_DATABASE=${DB_DATABASE}
                 - DB_SYNCHRONIZE=${DB_SYNCHRONIZE}
+                - REDIS_HOST=redis
+                - REDIS_PORT=6379
         expose:
             - '3000'
         depends_on:
             - mysql
+            - redis
         networks:
             - booquiz
         restart: unless-stopped
@@ -64,11 +67,22 @@ services:
             MYSQL_USER: ${DB_USERNAME}
             MYSQL_PASSWORD: ${DB_PASSWORD}
         volumes:
-          - mysql_data:/var/lib/mysql
-          - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
-
+            - mysql_data:/var/lib/mysql
+            - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
         expose:
             - '3306'
+        networks:
+            - booquiz
+        restart: unless-stopped
+
+    redis:
+        image: redis:alpine
+        container_name: booquiz-redis
+        command: redis-server --appendonly yes  # 데이터 지속성을 위한 AOF 활성화
+        volumes:
+            - redis_data:/data  # Redis 데이터 보존
+        expose:
+            - '6379'
         networks:
             - booquiz
         restart: unless-stopped
@@ -80,3 +94,5 @@ networks:
 volumes:
     mysql_data:
         name: booquiz-mysql-data
+    redis_data:
+        name: booquiz-redis-data
