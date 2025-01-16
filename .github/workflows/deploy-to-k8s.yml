@@ -3,7 +3,7 @@ name: Deploy to Kubernetes
 
 on:
   push:
-    branches: [main]
+    branches: [main, chore/k8s]
     paths:
       - 'apps/frontend/**'
       - 'apps/backend/**'
