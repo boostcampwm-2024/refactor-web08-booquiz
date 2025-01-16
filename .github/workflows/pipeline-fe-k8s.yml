@@ -23,6 +23,18 @@ jobs:
           pnpm install --no-frozen-lockfile
           cd apps/frontend && pnpm test
 
+      - name: Check secrets
+        run: |
+          if [ -n "${{ secrets.DOCKER_USERNAME }}" ]; then
+            echo "DOCKER_USERNAME exists"
+          else
+            echo "DOCKER_USERNAME is empty"
+          fi
+          
+          echo "DOCKER_TAG length: ${#DOCKER_TAG}"
+        env:
+          DOCKER_TAG: ${{ secrets.DOCKER_TAG }}
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
