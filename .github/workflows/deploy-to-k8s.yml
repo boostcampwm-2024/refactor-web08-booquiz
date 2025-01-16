@@ -23,10 +23,10 @@ jobs:
 
   mysql-pipeline:
 #    if: contains(github.event.head_commit.modified, 'k8s/base/mysql/')
-    uses: ./.github/workflows/database-pipeline.yml
+    uses: ./.github/workflows/pipeline-mysql-k8s.yml
     secrets: inherit
 
   redis-pipeline:
 #    if: contains(github.event.head_commit.modified, 'k8s/base/redis/')
-    uses: ./.github/workflows/redis-pipeline.yml
+    uses: ./.github/workflows/pipeline-redis-k8s.yml
     secrets: inherit
