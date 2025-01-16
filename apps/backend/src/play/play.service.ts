@@ -16,17 +16,19 @@ import { RuntimeException } from '@nestjs/core/errors/exceptions';
 import { clearTimeout } from 'node:timers';
 import { Player } from '../quiz-zone/entities/player.entity';
 import { CurrentQuizResultDto } from './dto/current-quiz-result.dto';
+import {IQuizZoneClient} from "./repository/quiz-zone-client.interface";
 
 @Injectable()
 export class PlayService {
     constructor(
         @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-        private readonly quizZoneService: QuizZoneService,
+        // private readonly quizZoneClient: QuizZoneService,
         @Inject('PlayInfoStorage') private readonly plays: Map<string, NodeJS.Timeout>,
+        @Inject('QuizZoneClient') private readonly quizZoneClient: IQuizZoneClient,
     ) {}
 
     async joinQuizZone(quizZoneId: string, sessionId: string) {
-        const { players } = await this.quizZoneService.findOne(quizZoneId);
+        const { players } = await this.quizZoneClient.findOne(quizZoneId);
 
         if (!players.has(sessionId)) {
             throw new NotFoundException('참여하지 않은 사용자입니다.');
@@ -39,7 +41,7 @@ export class PlayService {
     }
 
     async startQuizZone(quizZoneId: string, clientId: string) {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         const { hostId, stage, players } = quizZone;
 
         if (hostId !== clientId) {
@@ -50,7 +52,7 @@ export class PlayService {
             throw new BadRequestException('이미 시작된 퀴즈존입니다.');
         }
 
-        await this.quizZoneService.updateQuizZone(quizZoneId, {
+        await this.quizZoneClient.updateQuizZone(quizZoneId, {
             ...quizZone,
             stage: QUIZ_ZONE_STAGE.IN_PROGRESS,
         });
@@ -67,14 +69,14 @@ export class PlayService {
      * @throws {NotFoundException} 퀴즈존 정보가 없을 경우 예외가 발생합니다..
      */
     async playNextQuiz(quizZoneId: string, timeoutHandle: Function) {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         const { players, intervalTime } = quizZone;
 
         const currentQuizResult = this.getCurrentQuizResult(quizZone);
 
         const nextQuiz = await this.nextQuiz(quizZoneId);
 
-        await this.quizZoneService.updateQuizZone(quizZoneId, {
+        await this.quizZoneClient.updateQuizZone(quizZoneId, {
             ...quizZone,
             players: new Map(
                 [...players].map(([id, player]) => [id, { ...player, state: PLAYER_STATE.WAIT }]),
@@ -82,7 +84,7 @@ export class PlayService {
         });
 
         setTimeout(() => {
-            this.quizZoneService.updateQuizZone(quizZoneId, {
+            this.quizZoneClient.updateQuizZone(quizZoneId, {
                 ...quizZone,
                 players: new Map(
                     [...players].map(([id, player]) => [
@@ -134,7 +136,7 @@ export class PlayService {
      * @throws {NotFoundException} 모든 퀴즈가 이미 진행되었을 경우 예외가 발생합니다.
      */
     private async nextQuiz(quizZoneId: string): Promise<CurrentQuizDto> {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         quizZone.currentQuizIndex++;
 
         const { quizzes, currentQuizIndex, intervalTime } = quizZone;
@@ -159,7 +161,7 @@ export class PlayService {
     }
 
     async finishQuizZone(quizZoneId: string) {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         quizZone.stage = QUIZ_ZONE_STAGE.RESULT;
         return [...quizZone.players.values()].map((player) => player.id);
     }
@@ -169,7 +171,7 @@ export class PlayService {
      * @param quizZoneId - 퀴즈 존 ID.
      */
     private async quizTimeOut(quizZoneId: string) {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         const { players } = quizZone;
 
         players.forEach((player) => {
@@ -193,7 +195,7 @@ export class PlayService {
      * @throws {BadRequestException} 답변을 제출할 수 없는 경우 예외가 발생합니다.
      */
     async submit(quizZoneId: string, clientId: string, submittedQuiz: SubmittedQuiz) {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         const { stage, players } = quizZone;
 
         if (stage !== QUIZ_ZONE_STAGE.IN_PROGRESS) {
@@ -291,7 +293,7 @@ export class PlayService {
      * @returns 퀴즈 결과 요약 DTO를 포함한 Promise
      */
     async summaryQuizZone(quizZoneId: string, socketConnectTime: number = 30 * 1000) {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         const { players, quizzes } = quizZone;
 
         this.clearQuizZoneHandle(quizZoneId);
@@ -319,7 +321,7 @@ export class PlayService {
     }
 
     public clearQuizZone(quizZoneId: string) {
-        this.quizZoneService.clearQuizZone(quizZoneId);
+        this.quizZoneClient.clearQuizZone(quizZoneId);
     }
 
     private calculateQuizRanks(
@@ -432,7 +434,7 @@ export class PlayService {
     }
 
     async leaveQuizZone(quizZoneId: string, clientId: string) {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         const { stage, hostId, players } = quizZone;
 
         const isHost = hostId === clientId;
@@ -442,7 +444,7 @@ export class PlayService {
         }
 
         if (isHost) {
-            await this.quizZoneService.clearQuizZone(quizZoneId);
+            await this.quizZoneClient.clearQuizZone(quizZoneId);
         } else {
             players.delete(clientId);
         }
@@ -454,7 +456,7 @@ export class PlayService {
     }
 
     async chatQuizZone(clientId: string, quizZoneId: string) {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         const { players } = quizZone;
 
         if (players.get(clientId).state === PLAYER_STATE.PLAY) {
@@ -481,7 +483,7 @@ export class PlayService {
     }
 
     async changeNickname(quizZoneId: string, clientId: string, changedNickname: string) {
-        const quizZone = await this.quizZoneService.findOne(quizZoneId);
+        const quizZone = await this.quizZoneClient.findOne(quizZoneId);
         const { players } = quizZone;
 
         if (!players.has(clientId)) {
