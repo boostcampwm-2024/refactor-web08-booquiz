@@ -1,0 +1,32 @@
+# .github/workflows/deploy.yml
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/frontend/**'
+      - 'apps/backend/**'
+      - 'k8s/**'
+      - '.github/workflows/**'
+
+jobs:
+  frontend-pipeline:
+#    if: contains(github.event.head_commit.modified, 'apps/frontend/')
+    uses: ./.github/workflows/pipeline-fe-k8s.yml
+    secrets: inherit
+
+  backend-pipeline:
+#    if: contains(github.event.head_commit.modified, 'apps/backend/')
+    uses: ./.github/workflows/pipeline-be-k8s.yml
+    secrets: inherit
+
+  mysql-pipeline:
+#    if: contains(github.event.head_commit.modified, 'k8s/base/mysql/')
+    uses: ./.github/workflows/database-pipeline.yml
+    secrets: inherit
+
+  redis-pipeline:
+#    if: contains(github.event.head_commit.modified, 'k8s/base/redis/')
+    uses: ./.github/workflows/redis-pipeline.yml
+    secrets: inherit

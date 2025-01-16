@@ -1,0 +1,17 @@
+name: 'Setup Kubeconfig'
+description: 'Setup Kubernetes configuration'
+
+inputs:
+  kubeconfig:
+    description: 'Kubeconfig content'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup kubeconfig
+      shell: bash
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ inputs.kubeconfig }}" > ~/.kube/config
+        chmod 600 ~/.kube/config

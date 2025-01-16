@@ -1,0 +1,37 @@
+name: Frontend Pipeline
+
+on:
+  workflow_call:  # 다른 워크플로우에서 호출 가능하게 설정
+    secrets:
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_PASSWORD:
+        required: true
+      KUBE_CONFIG:
+        required: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test frontend
+        run: |
+          npm install -g pnpm
+          pnpm install --no-frozen-lockfile
+          cd apps/frontend && pnpm test
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/booquiz-frontend:${{ secrets.DOCKER_TAG }}
+
+      - name: Deploy
+        run: |
+          kubectl apply -f k8s/base/frontend/
+          kubectl rollout restart deployment/frontend -n booquiz

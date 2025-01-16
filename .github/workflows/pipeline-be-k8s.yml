@@ -1,0 +1,37 @@
+name: Backend Pipeline
+
+on:
+  workflow_call:
+    secrets:
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_PASSWORD:
+        required: true
+      KUBE_CONFIG:
+        required: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test backend
+        run: |
+          npm install -g pnpm
+          pnpm install --no-frozen-lockfile
+          cd apps/backend && pnpm test
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/booquiz-backend:${{ secrets.DOCKER_TAG }}
+
+      - name: Deploy
+        run: |
+          kubectl apply -f k8s/base/backend/
+          kubectl rollout restart deployment/backend -n booquiz

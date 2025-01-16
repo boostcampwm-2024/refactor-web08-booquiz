@@ -1,0 +1,43 @@
+# .github/workflows/database-pipeline.yml
+name: Database Pipeline
+
+on:
+  workflow_call:
+    secrets:
+      KUBE_CONFIG:
+        required: true
+      MYSQL_ROOT_PASSWORD:
+        required: true
+      DB_DATABASE:
+        required: true
+      DB_USERNAME:
+        required: true
+      DB_PASSWORD:
+        required: true
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up kubeconfig
+        uses: .github/actions/setup-k8s
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Create MySQL Secrets
+        run: |
+          kubectl create secret generic mysql-secrets \
+            --from-literal=root-password=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+            --from-literal=database=${{ secrets.DB_DATABASE }} \
+            --from-literal=username=${{ secrets.DB_USERNAME }} \
+            --from-literal=password=${{ secrets.DB_PASSWORD }} \
+            -n booquiz \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy MySQL
+        run: |
+          kubectl apply -f k8s/base/mysql/
+          kubectl rollout status statefulset/mysql -n booquiz
