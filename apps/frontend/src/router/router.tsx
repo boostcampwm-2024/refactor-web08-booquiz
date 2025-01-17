@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import MainPage from '@/pages/MainPage';
 import RootLayout from '../pages/RootLayout';
-import QuizZonePage from '@/pages/QuizZonePage';
+import QuizZonePage from '@/pages/QuizZone/ui/QuizZonePage';
 import CreateQuizZonePage from '@/pages/CreateQuizZonePage.tsx';
 import NotFound from '@/pages/NotFoundPage';
 
