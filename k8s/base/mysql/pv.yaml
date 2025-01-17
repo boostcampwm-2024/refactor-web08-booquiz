@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv
+spec:
+  capacity:
+    storage: 10Gi         # MySQL PVC 요청과 동일하게 설정
+  accessModes:
+    - ReadWriteOnce      # MySQL PVC와 동일한 accessMode
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /data/mysql    # MySQL 데이터 저장 경로
