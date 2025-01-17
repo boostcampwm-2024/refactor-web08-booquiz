@@ -10,6 +10,8 @@ RUN npm install -g pnpm
 # 의존성 파일 복사
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY tsconfig.base.json ./
+COPY packages/shared /app/packages/shared
+
 COPY apps/frontend/package.json apps/frontend/
 COPY apps/frontend/tsconfig*.json apps/frontend/
 
