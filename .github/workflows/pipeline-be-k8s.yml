@@ -41,6 +41,11 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/booquiz-backend:${{ secrets.DOCKER_TAG }}
 
+      - name: Set up kubeconfig
+        uses: ./.github/actions/setup-k8s
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
       - name: Deploy
         run: |
           kubectl apply -f k8s/base/backend/
