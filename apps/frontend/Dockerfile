@@ -21,13 +21,6 @@ RUN pnpm install --frozen-lockfile
 # 소스 복사
 COPY apps/frontend apps/frontend
 
-# 환경 변수 설정
-ARG VITE_API_URL
-ARG VITE_WS_URL
-
-ENV VITE_API_URL=${VITE_API_URL}
-ENV VITE_WS_URL=${VITE_WS_URL}
-
 # 빌드
 WORKDIR /app/apps/frontend
 RUN pnpm run build
