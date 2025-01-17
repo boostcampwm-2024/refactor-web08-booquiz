@@ -5,6 +5,7 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd());
 
+
     return {
         plugins: [react()],
         worker: {
@@ -22,6 +23,13 @@ export default defineConfig(({ mode }) => {
                     changeOrigin: true,
                     secure: false,
                     rewrite: (path) => path.replace(/^\/api/, ''), // /api prefix 제거
+                },
+                '/ws': {
+                    target: env.VITE_WS_URL,
+                    changeOrigin: true,
+                    secure: false,
+                    ws: true,
+                    rewrite: (path) => path.replace(/^\/ws/, ''), // /ws prefix 제거
                 },
             },
         },
