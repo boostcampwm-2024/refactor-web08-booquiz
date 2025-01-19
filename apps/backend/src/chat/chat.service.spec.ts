@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChatService } from './chat.service';
 import { NotFoundException } from '@nestjs/common';
-import { ChatMessage } from './entities/chat-message.entity';
+import {ChatMessage} from "@web08-booquiz/shared";
 
 describe('ChatService', () => {
     let service: ChatService;

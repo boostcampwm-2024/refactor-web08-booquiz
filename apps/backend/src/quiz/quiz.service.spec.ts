@@ -3,13 +3,13 @@ import { QuizService } from './quiz.service';
 import { QuizRepository } from './repository/quiz.repository';
 import { QuizSetRepository } from './repository/quiz-set.repository';
 import { QuizSet } from './entity/quiz-set.entity';
-import { QUIZ_TYPE } from '../common/constants';
 import { CreateQuizSetRequestDto } from './dto/create-quiz-set-request.dto';
 import { BadRequestException } from '@nestjs/common';
 import { UpdateQuizRequestDto } from './dto/update-quiz-request.dto';
 import { SearchQuizSetRequestDTO } from './dto/search-quiz-set-request.dto';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource, initializeTransactionalContext } from 'typeorm-transactional';
+import {QUIZ_TYPE} from "@web08-booquiz/shared";
 
 describe('QuizService', () => {
     let service: QuizService;

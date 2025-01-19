@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { QuizController } from './quiz.controller';
 import { QuizService } from './quiz.service';
 import { UpdateQuizRequestDto } from './dto/update-quiz-request.dto';
-import { QUIZ_TYPE } from '../common/constants';
+import {QUIZ_TYPE} from "@web08-booquiz/shared";
 
 describe('QuizController', () => {
     let quizController: QuizController;

@@ -1,5 +1,5 @@
-import { QUIZ_TYPE } from '../../common/constants';
 import { ApiProperty } from '@nestjs/swagger';
+import {QUIZ_TYPE} from "@web08-booquiz/shared";
 
 export class FindQuizzesResponseDto {
     @ApiProperty({ description: '해당 퀴즈 질문' })

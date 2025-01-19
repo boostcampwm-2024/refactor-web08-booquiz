@@ -9,11 +9,11 @@ import { Quiz } from './entities/quiz.entity';
 import { Player } from './entities/player.entity';
 import { QuizZone } from './entities/quiz-zone.entity';
 import { IQuizZoneRepository } from './repository/quiz-zone.repository.interface';
-import { getRandomNickName, PLAYER_STATE, QUIZ_ZONE_STAGE } from '../common/constants';
 import { FindQuizZoneDto } from './dto/find-quiz-zone.dto';
 import { CreateQuizZoneDto } from './dto/create-quiz-zone.dto';
 import { QuizService } from '../quiz/quiz.service';
 import { ChatService } from '../chat/chat.service';
+import {getRandomNickName, PLAYER_STATE, QUIZ_ZONE_STAGE} from "@web08-booquiz/shared";
 
 const INTERVAL_TIME = 5000;
 

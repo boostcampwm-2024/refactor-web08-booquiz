@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QuizZoneRepositoryMemory } from './quiz-zone.memory.repository';
 import { QuizZone } from '../entities/quiz-zone.entity';
-import { QUIZ_ZONE_STAGE } from '../../common/constants';
+import {QUIZ_ZONE_STAGE} from "@web08-booquiz/shared";
 
 describe('QuizZoneRepositoryMemory', () => {
     let storage: Map<string, QuizZone>;

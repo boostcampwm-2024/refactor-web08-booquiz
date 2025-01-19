@@ -1,5 +1,5 @@
-import { SubmittedQuiz } from './submitted-quiz.entity';
-import {PLAYER_STATE} from "@web08-booquiz/shared";
+import {PLAYER_STATE} from "../constants";
+import {SubmittedQuiz} from "./submitted-quiz.entity";
 
 /**
  * 퀴즈 게임에 참여하는 플레이어 엔티티

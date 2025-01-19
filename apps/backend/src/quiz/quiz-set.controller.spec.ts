@@ -4,7 +4,7 @@ import { QuizService } from './quiz.service';
 import { CreateQuizSetRequestDto } from './dto/create-quiz-set-request.dto';
 import { NotFoundException } from '@nestjs/common';
 import { QuizSetController } from './quiz-set.controller';
-import { QUIZ_TYPE } from '../common/constants';
+import {QUIZ_TYPE} from "@web08-booquiz/shared";
 
 describe('QuizController', () => {
     let quizSetController: QuizSetController;
