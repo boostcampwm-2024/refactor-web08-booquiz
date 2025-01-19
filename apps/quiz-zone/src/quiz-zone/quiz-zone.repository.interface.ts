@@ -1,3 +1,5 @@
+import { QuizZone } from '../entities/quiz-zone.entity';
+
 /**
  * 퀴즈 존 저장소를 위한 인터페이스입니다.
  *
@@ -10,7 +12,7 @@ export interface IQuizZoneRepository {
      * @param key - 조회할 퀴즈 존의 키
      * @returns 퀴즈 존 객체
      */
-    get(key: string): Promise<any | null>;
+    get(key: string): Promise<QuizZone | null>;
 
     /**
      * 주어진 키에 퀴즈 존을 저장합니다.
@@ -19,7 +21,7 @@ export interface IQuizZoneRepository {
      * @param value - 저장할 퀴즈 존 객체
      * @returns 저장 작업 완료
      */
-    set(key: string, value: any): Promise<void>;
+    set(key: string, value: QuizZone): Promise<void>;
 
     /**
      * 주어진 키에 해당하는 퀴즈 존을 삭제합니다.

@@ -20,11 +20,14 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@booquiz/shared": "workspace:*",
     "@nestjs-modules/ioredis": "^2.0.2",
+    "@nestjs/axios": "^4.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/swagger": "^8.0.5",
+    "@web08-booquiz/shared": "workspace:*",
+    "axios": "^1.7.9",
     "ioredis": "^5.4.2",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"

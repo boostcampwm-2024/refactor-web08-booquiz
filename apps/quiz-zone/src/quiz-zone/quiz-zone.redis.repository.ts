@@ -1,16 +1,20 @@
-import { IQuizZoneRepository } from '@booquiz/shared/interface/quiz-zone.repository.interface';
+import { IQuizZoneRepository } from './quiz-zone.repository.interface';
+import { RedisService } from '../redis/redis.service';
+import { QuizZone } from 'src/entities/quiz-zone.entity';
 
 export class QuizZoneRedisRepository implements IQuizZoneRepository {
-  get(key: string): Promise<any | null> {
-    throw new Error('Method not implemented.');
+  constructor(private readonly redisService: RedisService) {}
+
+  async get(key: string): Promise<QuizZone | null> {
+    return JSON.parse(await this.redisService.get(key));
   }
-  set(key: string, value: any): Promise<void> {
-    throw new Error('Method not implemented.');
+  async set(key: string, value: QuizZone): Promise<void> {
+    await this.redisService.set(key, JSON.stringify(value));
   }
-  delete(key: string): Promise<void> {
-    throw new Error('Method not implemented.');
+  async delete(key: string): Promise<void> {
+    await this.redisService.del(key);
   }
-  has(key: string): Promise<boolean> {
-    throw new Error('Method not implemented.');
+  async has(key: string): Promise<boolean> {
+    return await this.redisService.exists(key) > 0;
   }
 }
