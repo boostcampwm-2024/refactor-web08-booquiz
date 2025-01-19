@@ -1,4 +1,5 @@
-import { ChatMessage } from 'src/chat/entities/chat-message.entity';
+import {ChatMessage} from "@web08-booquiz/shared";
+
 export class SubmitResponseDto {
     constructor(
         public readonly fastestPlayerIds: string[],

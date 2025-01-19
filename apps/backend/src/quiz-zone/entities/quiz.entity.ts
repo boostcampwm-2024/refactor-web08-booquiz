@@ -1,4 +1,4 @@
-import { QUIZ_TYPE } from '../../common/constants';
+import {QUIZ_TYPE} from "@web08-booquiz/shared";
 
 /**
  * 퀴즈 엔티티

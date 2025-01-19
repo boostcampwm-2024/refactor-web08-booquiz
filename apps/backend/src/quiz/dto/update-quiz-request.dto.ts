@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { QUIZ_TYPE } from '../../common/constants';
 import { Quiz } from '../entity/quiz.entitiy';
 import { IsEnum, IsNumber, IsString, Length, Max, Min } from 'class-validator';
+import {QUIZ_TYPE} from "@web08-booquiz/shared";
 
 export class UpdateQuizRequestDto {
     @ApiProperty({ description: '업데이트 하는 퀴즈 질문' })
@@ -17,7 +17,7 @@ export class UpdateQuizRequestDto {
     @Max(60 * 10, {message: '퀴즈 시간은 10분 이하여야 합니다.'})
     @IsNumber({}, {message: '퀴즈 시간 값이 숫자가 아닙니다.'})
     readonly playTime: number;
-    @ApiProperty({ description: '업데이트 하는 퀴즈 타입' })
+    @ApiProperty({description: '업데이트 하는 퀴즈 타입'})
     @IsEnum(QUIZ_TYPE, {message: '정해진 퀴즈 타입이 아닙니다.'})
     readonly quizType: QUIZ_TYPE;
 }

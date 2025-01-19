@@ -1,4 +1,4 @@
-import { QUIZ_ZONE_STAGE } from '../../common/constants';
+import {QUIZ_ZONE_STAGE} from "@web08-booquiz/shared";
 
 /**
  * 현재 진행중인 퀴즈에 대한 DTO

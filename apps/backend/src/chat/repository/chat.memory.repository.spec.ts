@@ -1,5 +1,5 @@
 import { ChatRepositoryMemory } from './chat.memory.repository';
-import { ChatMessage } from '../entities/chat-message.entity';
+import {ChatMessage} from "@web08-booquiz/shared";
 
 // ChatRepositoryMemory 테스트 파일
 describe('ChatRepositoryMemory', () => {

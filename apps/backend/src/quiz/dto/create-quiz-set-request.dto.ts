@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { QUIZ_TYPE } from '../../common/constants';
 import { Quiz } from '../entity/quiz.entitiy';
 import { QuizSet } from '../entity/quiz-set.entity';
 import {
@@ -15,6 +14,7 @@ import {
     ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import {QUIZ_TYPE} from "@web08-booquiz/shared";
 
 export class QuizDetailsDto {
     @ApiProperty({ description: '퀴즈 질문' })

@@ -4,8 +4,8 @@ import { PlayService } from './play.service';
 import { QuizZoneService } from '../quiz-zone/quiz-zone.service';
 import { QuizZone } from '../quiz-zone/entities/quiz-zone.entity';
 import { SubmittedQuiz } from '../quiz-zone/entities/submitted-quiz.entity';
-import { PLAYER_STATE, QUIZ_TYPE, QUIZ_ZONE_STAGE } from '../common/constants';
 import { RuntimeException } from '@nestjs/core/errors/exceptions';
+import {PLAYER_STATE, QUIZ_TYPE, QUIZ_ZONE_STAGE} from "@web08-booquiz/shared";
 
 describe('PlayService', () => {
     let service: PlayService;
