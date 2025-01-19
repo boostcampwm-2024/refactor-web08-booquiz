@@ -7,6 +7,8 @@ on:
         required: true
       DOCKER_PASSWORD:
         required: true
+      DOCKER_TAG:
+        required: true
       KUBE_CONFIG:
         required: true
 
@@ -48,5 +50,7 @@ jobs:
 
       - name: Deploy
         run: |
-          kubectl apply -f k8s/base/backend/
+          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          export DOCKER_TAG=${{ secrets.DOCKER_TAG }}
+          envsubst < k8s/base/backend/deployment.yaml | kubectl apply -f -
           kubectl rollout restart deployment/backend -n booquiz
