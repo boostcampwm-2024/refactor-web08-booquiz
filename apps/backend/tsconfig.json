@@ -19,9 +19,5 @@
         "forceConsistentCasingInFileNames": false,
         "noFallthroughCasesInSwitch": false,
         "esModuleInterop": true,
-        "paths": {
-            "@shared/*": ["../shared/src/*"]
-        }
-    },
-    "references": [{ "path": "../../packages/shared" }]
+    }
 }
