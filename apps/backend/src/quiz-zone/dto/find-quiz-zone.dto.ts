@@ -1,9 +1,8 @@
-import { PLAYER_STATE, QUIZ_ZONE_STAGE } from '../../common/constants';
 import { CurrentQuizDto } from '../../play/dto/current-quiz.dto';
 import { SubmittedQuiz } from '../entities/submitted-quiz.entity';
-import { ChatMessage } from 'src/chat/entities/chat-message.entity';
 import { Rank } from '../../play/entities/rank.entity';
 import { Quiz } from '../entities/quiz.entity';
+import {ChatMessage, PLAYER_STATE, QUIZ_ZONE_STAGE} from "@web08-booquiz/shared";
 
 /**
  * 퀴즈 게임에 참여하는 플레이어 엔티티

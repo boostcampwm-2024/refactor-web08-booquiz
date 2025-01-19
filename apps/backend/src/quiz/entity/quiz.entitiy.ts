@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { QuizSet } from './quiz-set.entity';
-import { QUIZ_TYPE } from '../../common/constants';
 import { BaseEntity } from '../../common/base-entity';
+import {QUIZ_TYPE} from "@web08-booquiz/shared";
 
 /**
  * 퀴즈 엔티티

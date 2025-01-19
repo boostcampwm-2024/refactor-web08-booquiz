@@ -4,9 +4,9 @@ import { BadRequestException, ConflictException, NotFoundException } from '@nest
 import { QuizZone } from './entities/quiz-zone.entity';
 import { IQuizZoneRepository } from './repository/quiz-zone.repository.interface';
 import { Quiz } from './entities/quiz.entity';
-import { PLAYER_STATE, QUIZ_TYPE, QUIZ_ZONE_STAGE } from '../common/constants';
 import { QuizService } from '../quiz/quiz.service';
 import { ChatService } from '../chat/chat.service';
+import {PLAYER_STATE, QUIZ_TYPE, QUIZ_ZONE_STAGE} from "@web08-booquiz/shared";
 
 const nickNames: string[] = [
     '전설의고양이',

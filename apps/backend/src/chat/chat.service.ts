@@ -1,6 +1,6 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { ChatRepositoryMemory } from './repository/chat.memory.repository';
-import { ChatMessage } from './entities/chat-message.entity';
+import {ChatMessage} from "@web08-booquiz/shared";
 
 @Injectable()
 export class ChatService {

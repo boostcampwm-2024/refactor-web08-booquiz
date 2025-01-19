@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ChatMessage } from '../entities/chat-message.entity';
+import {ChatMessage} from "@web08-booquiz/shared";
 
 @Injectable()
 export class ChatRepositoryMemory {
