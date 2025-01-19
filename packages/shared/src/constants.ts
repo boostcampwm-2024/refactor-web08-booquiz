@@ -96,3 +96,8 @@ export const getRandomNickName = (): string => {
 export enum QUIZ_TYPE {
     SHORT_ANSWER = 'SHORT',
 }
+
+export const INTERVAL_TIME = 5000;
+
+export const QUIZ_SERVER_URL = 'http//quiz-server:3001'
+export const CHAT_SERVER_URL = 'http//chat-server:3002'

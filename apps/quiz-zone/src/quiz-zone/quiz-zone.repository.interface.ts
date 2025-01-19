@@ -1,4 +1,4 @@
-import { QuizZone } from '../entities/quiz-zone.entity';
+import { QuizZone } from '@web08-booquiz/shared';
 
 /**
  * 퀴즈 존 저장소를 위한 인터페이스입니다.

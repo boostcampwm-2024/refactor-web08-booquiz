@@ -1,20 +1,18 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IQuizZoneRepository } from './quiz-zone.repository.interface';
-import { QuizZone } from '../entities/quiz-zone.entity';
-import { Quiz } from '../entities/quiz.entity';
-import { FindQuizzesResponseDto } from './dto/find-quizzes-response.dto'
-import { FindQuizZoneDto, Player } from './dto/find-quiz-zone.dto';
-import { CreateQuizZoneDto } from './dto/create-quiz-zone.dto'
-import { ChatMessage } from './chat-message.interface';
+import { CustomHttpService } from '../http/http.service';
 import {
     CHAT_SERVER_URL,
-    getRandomNickName,
-    INTERVAL_TIME,
+    ChatMessage, FindQuizzesResponse,
+    getRandomNickName, INTERVAL_TIME,
+    Player,
     PLAYER_STATE,
-    QUIZ_SERVER_URL,
+    Quiz, QUIZ_SERVER_URL,
     QUIZ_ZONE_STAGE,
-} from '../constant';
-import { CustomHttpService } from '../http/http.service';
+    QuizZone,
+    RequestCreateQuizZone,
+    ResponseFindQuizZone,
+} from '@web08-booquiz/shared';
 
 @Injectable()
 export class QuizZoneService {
@@ -34,7 +32,7 @@ export class QuizZoneService {
      * @returns 퀴즈 존을 생성하고 저장하는 비동기 작업
      * @throws(ConflictException) 이미 저장된 ID인 경우 예외 발생
      */
-    async create(createQuizZoneDto: CreateQuizZoneDto, hostId: string): Promise<void> {
+    async create(createQuizZoneDto: RequestCreateQuizZone, hostId: string): Promise<void> {
         const { quizZoneId, title, description, limitPlayerCount, quizSetId } = createQuizZoneDto;
         const hasQuizZone = await this.repository.has(quizZoneId);
 
@@ -50,9 +48,10 @@ export class QuizZoneService {
             state: PLAYER_STATE.WAIT,
         };
 
-        const quizSet = await this.httpService.get(`${QUIZ_SERVER_URL}/quizSetId`) as FindQuizzesResponseDto[];
+        const quizSet = await this.httpService.get(`${QUIZ_SERVER_URL}/quizSetId`) as FindQuizzesResponse[];
 
         const quizzes: Quiz[] = quizSet.map((quiz) => ({
+            id: quiz.id,
             question: Buffer.from(quiz.question).toString('base64'),
             answer: quiz.answer,
             playTime: quiz.playTime * 1000,
@@ -117,14 +116,14 @@ export class QuizZoneService {
         return quizZone;
     }
 
-    private async getLobbyInfo(clinetId: string, quizZoneId: string): Promise<FindQuizZoneDto> {
+    private async getLobbyInfo(clinetId: string, quizZoneId: string): Promise<ResponseFindQuizZone> {
         const { players, title, description, quizzes, stage, hostId, maxPlayers } =
             await this.findOne(quizZoneId);
-        const { id, nickname, state } = players.get(clinetId);
+        const player = players.get(clinetId);
         const chatMessages = await this.httpService.get(`${CHAT_SERVER_URL}/${quizZoneId}`) as ChatMessage[];
 
         return {
-            currentPlayer: { id, nickname, state },
+            currentPlayer: player,
             title: title,
             description: description,
             quizCount: quizzes.length,
@@ -135,7 +134,7 @@ export class QuizZoneService {
         };
     }
 
-    private async getProgressInfo(clientId: string, quizZoneId: string): Promise<FindQuizZoneDto> {
+    private async getProgressInfo(clientId: string, quizZoneId: string): Promise<ResponseFindQuizZone> {
         const {
             players,
             stage,
@@ -148,11 +147,11 @@ export class QuizZoneService {
             description,
             quizzes,
         } = await this.findOne(quizZoneId);
-        const { id, nickname, state } = players.get(clientId);
+        const player = players.get(clientId);
         const chatMessages = await this.httpService.get(`${CHAT_SERVER_URL}/${quizZoneId}`) as ChatMessage[];
 
         return {
-            currentPlayer: { id, nickname, state },
+            currentPlayer: player,
             title,
             description,
             quizCount: quizzes.length,
@@ -171,7 +170,7 @@ export class QuizZoneService {
         };
     }
 
-    private async getResultInfo(clientId: string, quizZoneId: string): Promise<FindQuizZoneDto> {
+    private async getResultInfo(clientId: string, quizZoneId: string): Promise<ResponseFindQuizZone> {
         const { players, stage, title, description, hostId, quizzes, summaries } =
             await this.findOne(quizZoneId);
         const { id, nickname, state, submits, score } = players.get(clientId);

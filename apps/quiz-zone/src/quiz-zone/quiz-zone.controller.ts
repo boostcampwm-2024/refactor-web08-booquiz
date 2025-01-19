@@ -10,10 +10,8 @@ import {
 } from '@nestjs/common';
 import { QuizZoneService } from './quiz-zone.service';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CreateQuizZoneDto } from './dto/create-quiz-zone.dto'
-import { QuizZone } from '../entities/quiz-zone.entity';
-import { CHAT_SERVER_URL } from '../constant';
 import { CustomHttpService } from '../http/http.service';
+import { CHAT_SERVER_URL, QuizZone, RequestCreateQuizZone } from '@web08-booquiz/shared';
 
 
 @ApiTags('Quiz Zone')
@@ -30,7 +28,7 @@ export class QuizZoneController {
     @ApiResponse({ status: 201, description: '퀴즈존이 성공적으로 생성되었습니다.' })
     @ApiResponse({ status: 400, description: '세션 정보가 없습니다.' })
     async create(
-        @Body() createQuizZoneDto: CreateQuizZoneDto,
+        @Body() createQuizZoneDto: RequestCreateQuizZone,
         @Session() session: Record<string, any>,
     ): Promise<void> {
         if (!session || !session.id) {

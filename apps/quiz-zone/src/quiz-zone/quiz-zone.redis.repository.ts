@@ -1,6 +1,6 @@
 import { IQuizZoneRepository } from './quiz-zone.repository.interface';
 import { RedisService } from '../redis/redis.service';
-import { QuizZone } from 'src/entities/quiz-zone.entity';
+import { QuizZone } from '@web08-booquiz/shared';
 
 export class QuizZoneRedisRepository implements IQuizZoneRepository {
   constructor(private readonly redisService: RedisService) {}
