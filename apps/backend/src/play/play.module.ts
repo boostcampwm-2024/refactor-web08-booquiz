@@ -3,9 +3,10 @@ import { PlayService } from './play.service';
 import { PlayGateway } from './play.gateway';
 import { QuizZoneModule } from '../quiz-zone/quiz-zone.module';
 import { ChatModule } from 'src/chat/chat.module';
-
+import {HttpModule} from "@nestjs/axios";
+import {QuizZoneClient} from "./repository/quiz-zone-client";
 @Module({
-    imports: [QuizZoneModule, ChatModule],
+    imports: [QuizZoneModule, ChatModule, HttpModule],
     providers: [
         PlayGateway,
         {
@@ -17,6 +18,10 @@ import { ChatModule } from 'src/chat/chat.module';
             useValue: new Map(),
         },
         PlayService,
+        {
+            provide: 'QuizZoneClient',
+            useClass: QuizZoneClient,
+        }
     ],
 })
 export class PlayModule {}

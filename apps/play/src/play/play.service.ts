@@ -6,17 +6,15 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
-import { QuizZoneService } from '../quiz-zone/quiz-zone.service';
-import { SubmittedQuiz } from '../quiz-zone/entities/submitted-quiz.entity';
-import { QuizZone } from '../quiz-zone/entities/quiz-zone.entity';
-import { CurrentQuizDto } from './dto/current-quiz.dto';
-import { PLAYER_STATE, QUIZ_ZONE_STAGE } from '../common/constants';
+
+
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { RuntimeException } from '@nestjs/core/errors/exceptions';
 import { clearTimeout } from 'node:timers';
-import { Player } from '../quiz-zone/entities/player.entity';
-import { CurrentQuizResultDto } from './dto/current-quiz-result.dto';
 import {IQuizZoneClient} from "./repository/quiz-zone-client.interface";
+import {CurrentQuizDto} from "./dto/current-quiz.dto";
+import {CurrentQuizResultDto} from "./dto/current-quiz-result.dto";
+import {PLAYER_STATE, QUIZ_ZONE_STAGE} from "../common/constants";
 
 @Injectable()
 export class PlayService {
