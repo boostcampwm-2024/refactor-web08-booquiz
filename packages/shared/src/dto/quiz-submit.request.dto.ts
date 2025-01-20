@@ -4,7 +4,7 @@
  * @property answer - 플레이어가 제출한 답
  * @property submittedAt - 플레이어가 정답을 제출한 시각
  */
-export interface QuizSubmitDto {
+export interface RequestQuizSubmit {
     index: number;
     answer: string;
     submittedAt: number;

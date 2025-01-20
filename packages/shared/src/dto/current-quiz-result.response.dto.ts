@@ -1,4 +1,4 @@
-export interface CurrentQuizResultDto {
+export interface ResponseCurrentQuizResult {
     answer?: string;
     totalPlayerCount: number;
     correctPlayerCount: number;

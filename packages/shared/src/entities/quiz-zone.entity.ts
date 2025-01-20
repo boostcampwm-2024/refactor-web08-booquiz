@@ -1,7 +1,8 @@
-import { Quiz } from './quiz.entity';
-import { Player } from './player.entity';
-import { QUIZ_ZONE_STAGE } from '../../common/constants';
-import { QuizSummary } from '../../play/entities/quiz-summary.entity';
+import {Player} from "./player.entity";
+import {Quiz} from "./quiz.entity";
+import {QUIZ_ZONE_STAGE} from "../constants";
+import {QuizSummary} from "./quiz-summary.entity";
+
 /**
  * 퀴즈 게임을 진행하는 공간을 나타내는 퀴즈존 인터페이스
  *
