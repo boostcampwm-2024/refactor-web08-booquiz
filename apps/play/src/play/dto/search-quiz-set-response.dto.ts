@@ -1,4 +1,4 @@
-import { QuizSet } from '../entity/quiz-set.entity';
+import {QuizSet} from "@web08-booquiz/shared";
 
 export class SearchQuizSetResponseDTO {
 

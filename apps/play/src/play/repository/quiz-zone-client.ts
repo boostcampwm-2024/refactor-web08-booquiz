@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { firstValueFrom } from 'rxjs';
 import {IQuizZoneClient} from "./quiz-zone-client.interface";
-import { QuizZone } from "src/quiz-zone/entities/quiz-zone.entity";
 import {HttpService} from "@nestjs/axios";
+import {QuizZone} from "@web08-booquiz/shared";
 
 @Injectable()
 export class QuizZoneClient implements IQuizZoneClient {

@@ -1,7 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { QUIZ_TYPE } from '../../common/constants';
-import { Quiz } from '../entity/quiz.entitiy';
-import { QuizSet } from '../entity/quiz-set.entity';
+
 import {
     ArrayMaxSize,
     ArrayMinSize,
@@ -15,6 +13,7 @@ import {
     ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import {QUIZ_TYPE, QuizSet} from "@web08-booquiz/shared";
 
 export class QuizDetailsDto {
     @ApiProperty({ description: '퀴즈 질문' })
@@ -37,9 +36,6 @@ export class QuizDetailsDto {
     @IsEnum(QUIZ_TYPE, { message: '정해진 퀴즈 타입이 아닙니다.' })
     readonly quizType: QUIZ_TYPE;
 
-    toEntity(quizSet: QuizSet) {
-        return new Quiz(this.question, this.answer, this.playTime, this.quizType, quizSet);
-    }
 }
 
 export class CreateQuizSetRequestDto {

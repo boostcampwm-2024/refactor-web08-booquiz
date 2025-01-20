@@ -1,8 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlayGateway } from './play.gateway';
 import { PlayService } from './play.service';
-import { QuizZoneService } from '../quiz-zone/quiz-zone.service';
-import { ChatService } from '../chat/chat.service';
+
 
 describe('PlayGateway', () => {
   let gateway: PlayGateway;
@@ -31,16 +30,7 @@ describe('PlayGateway', () => {
           provide: 'ClientInfoStorage',
           useValue: new Map(),
         },
-        {
-          provide: QuizZoneService,
-          useValue: mockQuizZoneService,
-        },
-        {
-          provide: ChatService,
-          useValue: {
-            /* mock implementation */
-          },
-        },
+
       ],
     }).compile();
 

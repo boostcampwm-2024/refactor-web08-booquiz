@@ -1,4 +1,4 @@
-import { QuizZone } from "src/quiz-zone/entities/quiz-zone.entity";
+import {QuizZone} from "@web08-booquiz/shared";
 
 export interface IQuizZoneClient {
 

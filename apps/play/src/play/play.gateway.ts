@@ -16,7 +16,7 @@ import { ClientInfo } from './entities/client-info.entity';
 import { WebSocketWithSession } from '../core/SessionWsAdapter';
 import { RuntimeException } from '@nestjs/core/errors/exceptions';
 import { SubmitResponseDto } from './dto/submit-response.dto';
-import {CLOSE_CODE} from "../common/constants";
+import {CLOSE_CODE} from "@web08-booquiz/shared";
 
 
 /**
@@ -32,7 +32,6 @@ export class PlayGateway implements OnGatewayInit {
       @Inject('ClientInfoStorage')
       private readonly clients: Map<String, ClientInfo>,
       private readonly playService: PlayService,
-      private readonly chatService: ChatService,
   ) {}
 
   /**
@@ -206,7 +205,6 @@ export class PlayGateway implements OnGatewayInit {
   ): Promise<SendEventMessage<SubmitResponseDto>> {
     const clientId = client.session.id;
     const { quizZoneId } = this.getClientInfo(clientId);
-    const chatMessages = await this.chatService.get(quizZoneId);
 
     const {
       isLastSubmit,
@@ -227,7 +225,7 @@ export class PlayGateway implements OnGatewayInit {
 
     return {
       event: 'submit',
-      data: { fastestPlayerIds, submittedCount, totalPlayerCount, chatMessages },
+      data: { fastestPlayerIds, submittedCount, totalPlayerCount },
     };
   }
 
@@ -264,7 +262,6 @@ export class PlayGateway implements OnGatewayInit {
         this.clearClient(id, 'finish');
       });
       this.playService.clearQuizZone(quizZoneId);
-      this.chatService.delete(quizZoneId);
     }, time);
   }
 

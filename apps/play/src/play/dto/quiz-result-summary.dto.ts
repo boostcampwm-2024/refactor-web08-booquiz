@@ -1,5 +1,4 @@
-import { SubmittedQuiz } from '../../quiz-zone/entities/submitted-quiz.entity';
-import { Quiz } from '../../quiz-zone/entities/quiz.entity';
+import {Quiz, SubmittedQuiz} from "@web08-booquiz/shared";
 
 /**
  * 퀴즈 결과 출력을 위한 DTO

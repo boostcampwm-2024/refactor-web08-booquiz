@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { QUIZ_TYPE } from '../../common/constants';
-import { Quiz } from '../entity/quiz.entitiy';
+
 import { IsEnum, IsNumber, IsString, Length, Max, Min } from 'class-validator';
+import {QUIZ_TYPE} from "@web08-booquiz/shared";
 
 export class UpdateQuizRequestDto {
     @ApiProperty({ description: '업데이트 하는 퀴즈 질문' })
