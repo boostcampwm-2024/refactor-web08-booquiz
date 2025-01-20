@@ -2,7 +2,7 @@ import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 export interface CommonButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     text?: string;
-    isFilled?: boolean; // isFulfill -> isFilled로 변경
+    isFilled?: boolean;
     clickEvent: () => void;
     width?: string;
     height?: string;
@@ -12,16 +12,17 @@ const CommonButton = forwardRef<HTMLButtonElement, CommonButtonProps>(
     (
         {
             text,
-            isFilled = false, // isFulfill -> isFilled로 변경
+            isFilled = false,
             clickEvent,
             disabled = false,
             className = '',
             type = 'button',
+            width,
+            height,
             ...props
         },
         ref,
     ) => {
-        // 기본 스타일 클래스들
         const baseStyles = [
             'rounded-lg',
             'border-2',
@@ -34,9 +35,10 @@ const CommonButton = forwardRef<HTMLButtonElement, CommonButtonProps>(
             'focus:ring-2',
             'focus:ring-blue-600',
             'focus:ring-offset-2',
+            width && `w-[${width}px]`,
+            height && `h-[${height}px]`,
         ];
 
-        // 조건부 스타일 클래스들
         const conditionalStyles = isFilled
             ? [
                   'border-blue-600',
@@ -54,7 +56,6 @@ const CommonButton = forwardRef<HTMLButtonElement, CommonButtonProps>(
                   disabled && 'opacity-50 hover:bg-white',
               ];
 
-        // 사용자 정의 클래스와 기본 클래스 결합
         const combinedClassName = [
             ...baseStyles,
             ...conditionalStyles,
