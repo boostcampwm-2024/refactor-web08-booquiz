@@ -16,7 +16,7 @@
  */
 import { ReactNode } from 'react';
 
-interface ContentBoxProps {
+export interface ContentBoxProps {
     children: ReactNode;
     className?: string;
 }

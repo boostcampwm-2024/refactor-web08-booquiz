@@ -214,6 +214,9 @@ importers:
       '@storybook/preview-api':
         specifier: ^8.4.2
         version: 8.4.2(storybook@8.4.2(prettier@3.3.3))
+      '@storybook/testing-react':
+        specifier: ^2.0.1
+        version: 2.0.1(@storybook/client-logger@7.6.20)(@storybook/preview-api@8.4.2(storybook@8.4.2(prettier@3.3.3)))(@storybook/react@8.4.2(@storybook/test@8.4.2(storybook@8.4.2(prettier@3.3.3)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.4.2(prettier@3.3.3))(typescript@5.6.3))(@storybook/types@7.6.20)(react@18.3.1)
       '@types/react-router-dom':
         specifier: ^5.3.3
         version: 5.3.3
@@ -2156,6 +2159,17 @@ packages:
     resolution: {integrity: sha512-MipTdboStv0hsqF2Sw8TZgP0YnxCcDYwxkTOd4hmRzev/7Brtvpi4pqjqh8k98ZCvhrCPAPVIoX5drk+oi3YUA==}
     peerDependencies:
       storybook: ^8.4.2
+
+  '@storybook/testing-react@2.0.1':
+    resolution: {integrity: sha512-D0fT7f0TUU8+usR+0NSyCYQCYDWernQqGZou32ISsoBkY9IiH1JMY4hQE8zUaGozu9eMlaa2wieWIMsjWovpdw==}
+    engines: {node: '>=10'}
+    deprecated: In Storybook 7, this package has been promoted to a first-class Storybook functionality. This means that you no longer need it! Instead, you can import the same utilities, but from the @storybook/react package. Please migrate when you can.
+    peerDependencies:
+      '@storybook/client-logger': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
+      '@storybook/preview-api': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
+      '@storybook/react': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
+      '@storybook/types': ^7.0.0-beta.0 || ^7.0.0-rc.0 || ^7.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
 
   '@storybook/theming@7.6.17':
     resolution: {integrity: sha512-ZbaBt3KAbmBtfjNqgMY7wPMBshhSJlhodyMNQypv+95xLD/R+Az6aBYbpVAOygLaUQaQk4ar7H/Ww6lFIoiFbA==}
@@ -8468,6 +8482,15 @@ snapshots:
       '@vitest/expect': 2.0.5
       '@vitest/spy': 2.0.5
       storybook: 8.4.2(prettier@3.3.3)
+
+  '@storybook/testing-react@2.0.1(@storybook/client-logger@7.6.20)(@storybook/preview-api@8.4.2(storybook@8.4.2(prettier@3.3.3)))(@storybook/react@8.4.2(@storybook/test@8.4.2(storybook@8.4.2(prettier@3.3.3)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.4.2(prettier@3.3.3))(typescript@5.6.3))(@storybook/types@7.6.20)(react@18.3.1)':
+    dependencies:
+      '@storybook/client-logger': 7.6.20
+      '@storybook/csf': 0.1.11
+      '@storybook/preview-api': 8.4.2(storybook@8.4.2(prettier@3.3.3))
+      '@storybook/react': 8.4.2(@storybook/test@8.4.2(storybook@8.4.2(prettier@3.3.3)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.4.2(prettier@3.3.3))(typescript@5.6.3)
+      '@storybook/types': 7.6.20
+      react: 18.3.1
 
   '@storybook/theming@7.6.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
