@@ -6,7 +6,7 @@
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
-    "start": "node dist/main",
+    "start": "node dist/src/main",
     "start:debug": "nest start --debug --watch",
     "start:prod": "pm2-runtime start node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --cache --cache-location 'node_modules/.cache/.eslintcache' --fix",
