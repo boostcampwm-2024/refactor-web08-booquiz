@@ -126,3 +126,12 @@ export interface InitQuizZoneResponse {
     quizZone: QuizZone;
     now: number;
 }
+
+export interface QuizZoneContextType {
+    quizZoneState: QuizZone;
+    submitQuiz: (answer: string) => void;
+    startQuiz: () => void;
+    playQuiz: () => void;
+    exitQuiz: () => void;
+    sendChat: (chatMessage: ChatMessage) => void;
+}
