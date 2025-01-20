@@ -7,7 +7,7 @@
             "@/*": ["./src/*"],
             "@shared/*": ["../shared/src/*"]
         },
-        "types": ["vitest/globals", "@testing-library/jest-dom"],
+        "types": ["vitest/globals", "@testing-library/jest-dom", "@storybook/testing-react"],
         "lib": ["webworker", "es2015"],
         "declaration": true, // .d.ts 파일 생성 활성화
         "declarationDir": "dist", // 선언 파일을 dist 디렉토리에 생성
