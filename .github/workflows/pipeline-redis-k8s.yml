@@ -1,0 +1,24 @@
+name: Redis Pipeline
+
+on:
+  workflow_call:
+    secrets:
+      KUBE_CONFIG:
+        required: true
+
+jobs:
+  redis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up kubeconfig
+        uses: ./.github/actions/setup-k8s
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Deploy Redis
+        run: |
+          kubectl apply -f k8s/base/redis/
+          kubectl rollout status statefulset/redis -n booquiz

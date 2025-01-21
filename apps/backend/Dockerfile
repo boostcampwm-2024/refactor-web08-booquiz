@@ -10,6 +10,8 @@ RUN npm install -g pnpm
 # 의존성 파일 복사
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY tsconfig.base.json ./
+COPY packages/shared /app/packages/shared
+
 COPY apps/backend/package.json apps/backend/
 COPY apps/backend/tsconfig*.json apps/backend/
 
@@ -34,6 +36,12 @@ RUN npm install -g pnpm
 
 # pm2 설치
 RUN npm install -g pm2
+
+# shared 패키지와 workspace 설정 파일들 복사
+COPY --from=builder /app/packages/shared ./packages/shared
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # package.json 복사 및 프로덕션 의존성 설치
 COPY --from=builder /app/apps/backend/package.json ./package.json
