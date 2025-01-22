@@ -16,6 +16,8 @@ import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { QuizModule } from './quiz/quiz.module';
 import { ChatModule } from './chat/chat.module';
+import { MessageQueueService } from './message-queue/message-queue.service';
+import { MessageQueueModule } from './message-queue/message-queue.module';
 
 @Module({
     imports: [
@@ -38,6 +40,7 @@ import { ChatModule } from './chat/chat.module';
         }),
         QuizModule,
         ChatModule,
+        MessageQueueModule,
     ],
     controllers: [AppController],
     providers: [
@@ -46,6 +49,7 @@ import { ChatModule } from './chat/chat.module';
             provide: APP_PIPE,
             useClass: ValidationPipe,
         },
+        MessageQueueService,
     ],
 })
 export class AppModule implements NestModule {
