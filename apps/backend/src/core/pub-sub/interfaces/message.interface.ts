@@ -1,4 +1,4 @@
-export interface Message<T> {
-    topic: string;
-    data: T;
+export interface Message<TTopic, TData> {
+    topic: TTopic;
+    data: TData;
 }

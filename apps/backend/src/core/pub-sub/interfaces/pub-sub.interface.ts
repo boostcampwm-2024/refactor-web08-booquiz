@@ -1,14 +1,14 @@
 import { Message } from './message.interface'
 import { MessageHandler } from '../types';
 
-export interface PubSub<T> {
-    subscribe(publisherId: string, subscriberId: string, handler: MessageHandler<T>): Promise<void>;
+type Unsubscribe = () => Promise<void>;
 
-    unsubscribe(publisherId: string, subscriberId: string): Promise<void>;
+export interface PubSub<TTopic, TData> {
+    subscribe(publisherId: string, subscriberId: string, handler: MessageHandler<TTopic, TData>): Promise<Unsubscribe>;
 
     addPublisher(publisherId: string): Promise<void>;
 
     removePublisher(publisherId: string): Promise<void>;
 
-    publish(publisherId: string, message: Message<T>): Promise<void>;
+    publish(publisherId: string, message: Message<TTopic, TData>): Promise<void>;
 }

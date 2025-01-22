@@ -1,3 +1,3 @@
 import { Message } from './interfaces/message.interface';
 
-export type MessageHandler<T> = (message: Message<T>) => void | Promise<void>;
+export type MessageHandler<TTopic, TData> = (message: Message<TTopic, TData>) => void | Promise<void>;

@@ -293,6 +293,7 @@ export class PlayGateway implements OnGatewayInit {
             this.clearQuizZone(playerIds, quizZoneId, 0);
         } else {
             this.broadcast(playerIds, 'someone_leave', clientId);
+            await this.chatService.leave(quizZoneId, clientId);
             this.clearClient(clientId, 'Client leave');
         }
 

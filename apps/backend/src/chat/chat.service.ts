@@ -9,7 +9,7 @@ export class ChatService {
         @Inject('ChatRepository')
         private readonly chatRepository: ChatRepositoryMemory,
         @Inject('PubSub')
-        private readonly pubSub: PubSub<ChatMessage>
+        private readonly pubSub: PubSub<'chat' | 'leave', ChatMessage>
     ) {
     }
 
@@ -31,15 +31,21 @@ export class ChatService {
     }
 
     async join(chatId: string, player: Player, handleSendMessage: (data: ChatMessage) => void) {
-        await this.pubSub.subscribe(chatId, player.id, (message) => {
-            const { data } = message;
+        const unsubscribe = await this.pubSub.subscribe(chatId, player.id, async (message) => {
+            const { topic, data } = message;
             const { clientId } = data;
 
-            if (clientId !== player.id) {
-                handleSendMessage(data);
+            switch (topic) {
+                case 'chat':
+                    if (clientId !== player.id) {
+                        handleSendMessage(data);
+                    }
+                    return this.add(chatId, data);
+                case 'leave':
+                    if (clientId === player.id) {
+                        return unsubscribe();
+                    }
             }
-
-            this.add(chatId, data);
         });
     }
 
@@ -48,6 +54,17 @@ export class ChatService {
             topic: 'chat',
             data: chatMessage,
         });
+    }
+
+    async leave(chatId: string, clientId: string) {
+        await this.pubSub.publish(chatId, {
+            topic: 'leave',
+            data: {
+                clientId,
+                nickname: '',
+                message: '',
+            },
+        })
     }
 
     private async add(id: string, chatMessage: ChatMessage) {
