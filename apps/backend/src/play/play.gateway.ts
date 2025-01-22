@@ -113,12 +113,10 @@ export class PlayGateway implements OnGatewayInit {
         this.clients.set(sessionId, { quizZoneId, socket: client });
 
         this.broadcast(playerIds, 'someone_join', { id, nickname });
+        await this.chatService.join(quizZoneId, currentPlayer, (message: ChatMessage) => {
+            client.send(JSON.stringify({event: 'chat', data: message}));
+        });
 
-        await this.chatService.join(
-            quizZoneId,
-            currentPlayer,
-            (message: ChatMessage) => client.send(JSON.stringify(message))
-        );
 
         return {
             event: 'join',

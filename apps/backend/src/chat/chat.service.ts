@@ -37,9 +37,7 @@ export class ChatService {
 
             switch (topic) {
                 case 'chat':
-                    if (clientId !== player.id) {
-                        handleSendMessage(data);
-                    }
+                    handleSendMessage(data);
                     return this.add(chatId, data);
                 case 'leave':
                     if (clientId === player.id) {
