@@ -30,7 +30,7 @@ export class MessageBroker<T> implements PubSub<T> {
             throw new Error(`Publisher with ID ${id} does not exist`);
         }
 
-        return Promise.all([...subscribers.values()].map(handler => handler(message)));
+        await Promise.all([...subscribers.values()].map(handler => handler(message)));
     }
 
     public async subscribe(publisherId: string, subscriberId: string, handler: MessageHandler<T>) {

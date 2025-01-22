@@ -10,5 +10,5 @@ export interface PubSub<T> {
 
     removePublisher(publisherId: string): Promise<void>;
 
-    publish(publisherId: string, message: Message<T>): Promise<void[]>;
+    publish(publisherId: string, message: Message<T>): Promise<void>;
 }
