@@ -4,7 +4,7 @@ import { MessageHandler } from './types';
 
 export class MessageBroker<TTopic, TData> implements PubSub<TTopic, TData> {
     constructor(
-        private readonly publishers: Map<string, Map<string, MessageHandler<TTopic, TData>>>,
+        private readonly publishers: Map<string, Map<string, MessageHandler<TTopic, TData>>> = new Map(),
     ) {}
 
     public async addPublisher(id: string) {
