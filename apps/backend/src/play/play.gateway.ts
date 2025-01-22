@@ -10,14 +10,13 @@ import { PlayService } from './play.service';
 import { Server } from 'ws';
 import { QuizSubmitDto } from './dto/quiz-submit.dto';
 import { QuizJoinDto } from './dto/quiz-join.dto';
-import { BadRequestException, Inject } from '@nestjs/common';
-import { SendEventMessage } from './entities/send-event.entity';
-import { ClientInfo } from './entities/client-info.entity';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { WebSocketWithSession } from '../core/SessionWsAdapter';
 import { RuntimeException } from '@nestjs/core/errors/exceptions';
 import { SubmitResponseDto } from './dto/submit-response.dto';
 import { ChatService } from '../chat/chat.service';
-import {ChatMessage, CLOSE_CODE} from "@web08-booquiz/shared";
+import { ChatMessage, SendEventMessage } from '@web08-booquiz/shared';
+import { PubSub } from '../core/pub-sub/interfaces/pub-sub.interface';
 
 /**
  * 퀴즈 게임에 대한 WebSocket 연결을 관리하는 Gateway입니다.
@@ -30,9 +29,11 @@ export class PlayGateway implements OnGatewayInit {
 
     constructor(
         @Inject('ClientInfoStorage')
-        private readonly clients: Map<String, ClientInfo>,
+        private readonly clients: Map<String, WebSocketWithSession>,
         private readonly playService: PlayService,
         private readonly chatService: ChatService,
+        @Inject('PubSub')
+        private readonly pubSub: PubSub<string, SendEventMessage<any>>,
     ) {}
 
     /**
@@ -46,35 +47,13 @@ export class PlayGateway implements OnGatewayInit {
     }
 
     private sendToClient(clientId: string, event: string, data?: any) {
-        const { socket } = this.getClientInfo(clientId);
-        socket.send(JSON.stringify({ event, data }));
-    }
+        const socket = this.clients.get(clientId);
 
-    private broadcast(clientIds: string[], event: string, data?: any) {
-        clientIds.forEach((clientId) => {
-            this.sendToClient(clientId, event, data);
-        });
-    }
-
-    /**
-     * 클라이언트의 세션 ID를 이용하여 클라이언트 정보를 조회합니다.
-     *
-     * @param clientId - 클라이언트의 세션 ID
-     */
-    private getClientInfo(clientId: string): ClientInfo {
-        const clientInfo = this.clients.get(clientId);
-
-        if (!clientInfo) {
-            throw new BadRequestException('사용자의 접속 정보를 찾을 수 없습니다.');
+        if (socket === undefined) {
+            throw new NotFoundException('사용자의 접속 정보를 찾을 수 없습니다.')
         }
 
-        return clientInfo;
-    }
-
-    private clearClient(clientId: string, reason?: string) {
-        const { socket } = this.getClientInfo(clientId);
-        this.clients.delete(clientId);
-        socket.close(CLOSE_CODE.NORMAL, reason);
+        socket.send(JSON.stringify({ event, data }));
     }
 
     /**
@@ -97,30 +76,21 @@ export class PlayGateway implements OnGatewayInit {
         );
 
         const { id, nickname } = currentPlayer;
-        const playerIds = players.map((player) => player.id);
-        const data = players.map(({ id, nickname }) => ({
-            id,
-            nickname,
-        }));
 
-        if (this.clients.has(sessionId) && this.clients.get(sessionId).quizZoneId === quizZoneId) {
-            this.clients.set(sessionId, { quizZoneId, socket: client });
-            return {
-                event: 'join',
-                data,
-            };
-        }
-        this.clients.set(sessionId, { quizZoneId, socket: client });
+        await this.subscribePlay(quizZoneId, client);
 
-        this.broadcast(playerIds, 'someone_join', { id, nickname });
         await this.chatService.join(quizZoneId, currentPlayer, (message: ChatMessage) => {
             client.send(JSON.stringify({event: 'chat', data: message}));
         });
 
+        await this.pubSub.publish(quizZoneId, { topic: id, data: {
+            event: 'someone_join',
+            data: { id, nickname }
+        }});
 
         return {
             event: 'join',
-            data,
+            data: players.map(({ id, nickname }) => ({ id, nickname }))
         };
     }
 
@@ -129,16 +99,14 @@ export class PlayGateway implements OnGatewayInit {
         @ConnectedSocket() client: WebSocketWithSession,
         @MessageBody() changedNickname: string,
     ): Promise<SendEventMessage<string>> {
-        const clientId = client.session.id;
-        const { quizZoneId } = this.getClientInfo(clientId);
+        const { id, quizZoneId } = client.session;
 
-        const { playerIds } = await this.playService.changeNickname(
-            quizZoneId,
-            clientId,
-            changedNickname,
-        );
+        await this.playService.changeNickname(quizZoneId, id, changedNickname);
 
-        this.broadcast(playerIds, 'updateNickname', { clientId, changedNickname });
+        await this.pubSub.publish(quizZoneId, {topic: id, data: {
+            event: 'changeNickname',
+            data: {id, changedNickname}
+        }});
 
         return {
             event: 'changeNickname',
@@ -153,12 +121,14 @@ export class PlayGateway implements OnGatewayInit {
      */
     @SubscribeMessage('start')
     async start(@ConnectedSocket() client: WebSocketWithSession) {
-        const clientId = client.session.id;
-        const { quizZoneId } = this.getClientInfo(clientId);
+        const { id, quizZoneId } = client.session;
 
-        const playerIds = await this.playService.startQuizZone(quizZoneId, clientId);
+        await this.playService.startQuizZone(quizZoneId, id);
 
-        this.broadcast(playerIds, 'start', 'OK');
+        await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {
+            event: 'start',
+            data: 'OK'
+        }});
 
         this.server.emit('nextQuiz', quizZoneId);
     }
@@ -170,15 +140,21 @@ export class PlayGateway implements OnGatewayInit {
      */
     private async playNextQuiz(quizZoneId: string) {
         try {
-            const { nextQuiz, playerIds, currentQuizResult } = await this.playService.playNextQuiz(
+            const { nextQuiz, currentQuizResult } = await this.playService.playNextQuiz(
                 quizZoneId,
-                () => {
-                    this.broadcast(playerIds, 'quizTimeOut');
+                async () => {
+                    await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {
+                            event: 'quizTimeOut',
+                            data: undefined,
+                        }});
                     this.server.emit('nextQuiz', quizZoneId);
                 },
             );
 
-            this.broadcast(playerIds, 'nextQuiz', { nextQuiz, currentQuizResult });
+            await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {
+                event: 'nextQuiz',
+                data: { nextQuiz, currentQuizResult }
+            }});
         } catch (error) {
             if (error instanceof RuntimeException) {
                 await this.finishQuizZone(quizZoneId);
@@ -189,10 +165,7 @@ export class PlayGateway implements OnGatewayInit {
     }
 
     private async finishQuizZone(quizZoneId: string) {
-        const playerIds = await this.playService.finishQuizZone(quizZoneId);
-
-        this.broadcast(playerIds, 'finish');
-
+        await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {event: 'finish', data: undefined}});
         this.server.emit('summary', quizZoneId);
     }
 
@@ -208,30 +181,33 @@ export class PlayGateway implements OnGatewayInit {
         @ConnectedSocket() client: WebSocketWithSession,
         @MessageBody() quizSubmit: QuizSubmitDto,
     ): Promise<SendEventMessage<SubmitResponseDto>> {
-        const clientId = client.session.id;
-        const { quizZoneId } = this.getClientInfo(clientId);
-        const chatMessages = await this.chatService.get(quizZoneId);
+        const { id, quizZoneId } = client.session;
 
         const {
             isLastSubmit,
             fastestPlayerIds,
             submittedCount,
             totalPlayerCount,
-            otherSubmittedPlayerIds,
-        } = await this.playService.submit(quizZoneId, clientId, {
+        } = await this.playService.submit(quizZoneId, id, {
             ...quizSubmit,
             receivedAt: Date.now(),
         });
 
         if (isLastSubmit) {
             this.server.emit('nextQuiz', quizZoneId);
+        } else {
+            await this.pubSub.publish(quizZoneId, {topic: id, data: {
+                event: 'someone_submit',
+                data: { id, submittedCount }
+            }});
         }
-
-        this.broadcast(otherSubmittedPlayerIds, 'someone_submit', { clientId, submittedCount });
 
         return {
             event: 'submit',
-            data: { fastestPlayerIds, submittedCount, totalPlayerCount, chatMessages },
+            data: {
+                fastestPlayerIds, submittedCount, totalPlayerCount,
+                chatMessages: await this.chatService.get(quizZoneId)
+            },
         };
     }
 
@@ -248,9 +224,7 @@ export class PlayGateway implements OnGatewayInit {
             this.sendToClient(id, 'summary', { score, submits, quizzes, ranks, endSocketTime });
         });
 
-        const clientsIds = summaries.map(({ id }) => id);
-
-        this.clearQuizZone(clientsIds, quizZoneId, endSocketTime - Date.now());
+        this.clearQuizZone(quizZoneId, endSocketTime - Date.now());
     }
 
     /**
@@ -258,17 +232,14 @@ export class PlayGateway implements OnGatewayInit {
      *
      * - 방장이 나가면 퀴즈 존을 삭제하고 모든 플레이어에게 방장이 나갔다고 알립니다.
      * - 일반 플레이어가 나가면 퀴즈 존에서 나가고 다른 플레이어에게 나갔다고 알립니다.
-     * @param clientIds - 퀴즈존에 참여하고 있는 클라이언트 id 리스트
      * @param quizZoneId - 퀴즈가 끝난 퀴즈존 id
      * @param time - 소켓 연결 종료 시간 종료 시간
      */
-    private clearQuizZone(clientIds: string[], quizZoneId: string, time: number) {
-        setTimeout(() => {
-            clientIds.forEach((id) => {
-                this.clearClient(id, 'finish');
-            });
-            this.playService.clearQuizZone(quizZoneId);
-            this.chatService.delete(quizZoneId);
+    private clearQuizZone(quizZoneId: string, time: number) {
+        setTimeout(async () => {
+            await this.playService.clearQuizZone(quizZoneId);
+            await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {event: 'close', data: undefined}});
+            await this.chatService.delete(quizZoneId);
         }, time);
     }
 
@@ -281,18 +252,16 @@ export class PlayGateway implements OnGatewayInit {
      */
     @SubscribeMessage('leave')
     async leave(@ConnectedSocket() client: WebSocketWithSession) {
-        const clientId = client.session.id;
-        const { quizZoneId } = this.getClientInfo(clientId);
+        const { id, quizZoneId } = client.session;
 
-        const { isHost, playerIds } = await this.playService.leaveQuizZone(quizZoneId, clientId);
+        const { isHost } = await this.playService.leaveQuizZone(quizZoneId, id);
 
         if (isHost) {
-            this.broadcast(playerIds, 'close');
-            this.clearQuizZone(playerIds, quizZoneId, 0);
+            await this.pubSub.publish(quizZoneId, {topic: id, data: {event: 'close', data: undefined}});
+            this.clearQuizZone(quizZoneId, 0);
         } else {
-            this.broadcast(playerIds, 'someone_leave', clientId);
-            await this.chatService.leave(quizZoneId, clientId);
-            this.clearClient(clientId, 'Client leave');
+            await this.pubSub.publish(quizZoneId, {topic: id, data: {event: 'someone_leave', data: undefined}});
+            await this.chatService.leave(quizZoneId, id);
         }
 
         return { event: 'leave', data: 'OK' };
@@ -303,11 +272,28 @@ export class PlayGateway implements OnGatewayInit {
         @ConnectedSocket() client: WebSocketWithSession,
         @MessageBody() message: ChatMessage,
     ) {
-        const clientId = client.session.id;
-        const { quizZoneId } = this.getClientInfo(clientId);
-        const clientIds = await this.playService.chatQuizZone(clientId, quizZoneId);
+        await this.chatService.send(client.session.quizZoneId, message);
+    }
 
-        this.broadcast(clientIds, 'chat', message);
-        await this.chatService.send(quizZoneId, message);
+    private async subscribePlay(quizZoneId: string, client: WebSocketWithSession) {
+        const clientId = client.session.id;
+
+        this.clients.set(clientId, client);
+
+        try {
+            await this.pubSub.addPublisher(quizZoneId);
+        } catch (error) {}
+        const unsubscribe = await this.pubSub.subscribe(
+            quizZoneId, clientId, async (message) => {
+            const {topic, data} = message;
+
+            if (topic !== clientId) {
+                client.send(JSON.stringify(data));
+            } else if (data.event === 'someone_leave') {
+                await unsubscribe();
+                this.clients.delete(clientId);
+                client.close();
+            }
+        });
     }
 }

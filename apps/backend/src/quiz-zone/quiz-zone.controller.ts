@@ -12,7 +12,7 @@ import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { QuizZoneService } from './quiz-zone.service';
 import { ChatService } from '../chat/chat.service';
 import { CreateQuizZoneDto } from './dto/create-quiz-zone.dto';
-import { PlayService } from '../play/play.service';
+import { SessionWithQuizZone } from '../core/SessionWsAdapter';
 
 @ApiTags('Quiz Zone')
 @Controller('quiz-zone')
@@ -20,7 +20,6 @@ export class QuizZoneController {
     constructor(
         private readonly quizZoneService: QuizZoneService,
         private readonly chatService: ChatService,
-        private readonly playService: PlayService,
     ) {}
 
     @Post()
@@ -30,7 +29,7 @@ export class QuizZoneController {
     @ApiResponse({ status: 400, description: '세션 정보가 없습니다.' })
     async create(
         @Body() createQuizZoneDto: CreateQuizZoneDto,
-        @Session() session: Record<string, any>,
+        @Session() session: SessionWithQuizZone,
     ): Promise<void> {
         if (!session || !session.id) {
             throw new BadRequestException('세션 정보가 없습니다.');
@@ -52,7 +51,7 @@ export class QuizZoneController {
     })
     @ApiResponse({ status: 400, description: '세션 정보가 없습니다.' })
     async checkExistingQuizZoneParticipation(
-        @Session() session: Record<string, any>,
+        @Session() session: SessionWithQuizZone,
         @Param('quizZoneId') quizZoneId: string,
     ) {
         const sessionQuizZoneId = session.quizZoneId;
@@ -69,7 +68,7 @@ export class QuizZoneController {
     })
     @ApiResponse({ status: 400, description: '세션 정보가 없습니다.' })
     async findQuizZoneInfo(
-        @Session() session: Record<string, any>,
+        @Session() session: SessionWithQuizZone,
         @Param('quizZoneId') quizZoneId: string,
     ) {
         const serverTime = Date.now();

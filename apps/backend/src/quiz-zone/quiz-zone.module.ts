@@ -1,14 +1,13 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { QuizZoneService } from './quiz-zone.service';
 import { QuizZoneController } from './quiz-zone.controller';
 import { QuizZoneRepositoryMemory } from './repository/quiz-zone.memory.repository';
 import { QuizModule } from '../quiz/quiz.module';
 import { ChatModule } from 'src/chat/chat.module';
-import { PlayModule } from '../play/play.module';
 
 @Module({
     controllers: [QuizZoneController],
-    imports: [QuizModule, ChatModule, forwardRef(() => PlayModule)],
+    imports: [QuizModule, ChatModule],
     providers: [
         QuizZoneService,
         {
