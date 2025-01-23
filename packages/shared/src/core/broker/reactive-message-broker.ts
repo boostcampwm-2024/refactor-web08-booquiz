@@ -4,7 +4,7 @@ import { MessageHandler } from './types';
 
 export class ReactiveMessageBroker<TMessage> implements Broker<TMessage> {
     constructor(
-        private publishers: Map<string, Subject<TMessage>> = new Map(),
+        private readonly publishers: Map<string, Subject<TMessage>> = new Map(),
     ) {}
 
     public async addPublisher(id: string) {
