@@ -10,12 +10,12 @@ import { PlayService } from './play.service';
 import { Server } from 'ws';
 import { QuizSubmitDto } from './dto/quiz-submit.dto';
 import { QuizJoinDto } from './dto/quiz-join.dto';
-import { Inject, NotFoundException } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { WebSocketWithSession } from '../core/SessionWsAdapter';
 import { RuntimeException } from '@nestjs/core/errors/exceptions';
 import { SubmitResponseDto } from './dto/submit-response.dto';
 import { ChatService } from '../chat/chat.service';
-import { Broker, ChatMessage, SendEventMessage } from '@web08-booquiz/shared';
+import { BroadcastPlayEvent, Broker, ChatMessage, PlayEvent, SendEventMessage } from '@web08-booquiz/shared';
 
 /**
  * 퀴즈 게임에 대한 WebSocket 연결을 관리하는 Gateway입니다.
@@ -27,12 +27,9 @@ export class PlayGateway implements OnGatewayInit {
     server: Server;
 
     constructor(
-        @Inject('ClientInfoStorage')
-        private readonly clients: Map<String, WebSocketWithSession>,
         private readonly playService: PlayService,
         private readonly chatService: ChatService,
-        @Inject('Broker')
-        private readonly broker: Broker<SendEventMessage<any>>,
+        @Inject('Broker') private readonly broker: Broker<SendEventMessage<BroadcastPlayEvent, any>>,
     ) {}
 
     /**
@@ -45,16 +42,6 @@ export class PlayGateway implements OnGatewayInit {
         server.on('summary', (quizZoneId: string) => this.summary(quizZoneId));
     }
 
-    private sendToClient(clientId: string, event: string, data?: any) {
-        const socket = this.clients.get(clientId);
-
-        if (socket === undefined) {
-            throw new NotFoundException('사용자의 접속 정보를 찾을 수 없습니다.')
-        }
-
-        socket.send(JSON.stringify({ event, data }));
-    }
-
     /**
      * 클라이언트가 퀴즈 방에 참여했다는 메세지를 방의 다른 참여자들에게 전송합니다.
      *
@@ -65,7 +52,7 @@ export class PlayGateway implements OnGatewayInit {
     async join(
         @ConnectedSocket() client: WebSocketWithSession,
         @MessageBody() quizJoinDto: QuizJoinDto,
-    ): Promise<SendEventMessage<ResponsePlayerDto[]>> {
+    ): Promise<SendEventMessage<PlayEvent, ResponsePlayerDto[]>> {
         const sessionId = client.session.id;
         const { quizZoneId } = quizJoinDto;
 
@@ -86,7 +73,7 @@ export class PlayGateway implements OnGatewayInit {
 
         return {
             event: 'join',
-            sender: id,
+            sender: quizZoneId,
             data: players.map(({ id, nickname }) => ({ id, nickname }))
         };
     }
@@ -95,7 +82,7 @@ export class PlayGateway implements OnGatewayInit {
     async changeNickname(
         @ConnectedSocket() client: WebSocketWithSession,
         @MessageBody() changedNickname: string,
-    ): Promise<SendEventMessage<string>> {
+    ): Promise<SendEventMessage<PlayEvent, string>> {
         const { id, quizZoneId } = client.session;
 
         await this.playService.changeNickname(quizZoneId, id, changedNickname);
@@ -104,7 +91,7 @@ export class PlayGateway implements OnGatewayInit {
 
         return {
             event: 'changeNickname',
-            sender: id,
+            sender: quizZoneId,
             data: 'OK',
         };
     }
@@ -119,7 +106,6 @@ export class PlayGateway implements OnGatewayInit {
         const { id, quizZoneId } = client.session;
 
         await this.playService.startQuizZone(quizZoneId, id);
-
         await this.broker.publish(quizZoneId, {event: 'start', sender: quizZoneId, data: 'OK'});
 
         this.server.emit('nextQuiz', quizZoneId);
@@ -134,10 +120,7 @@ export class PlayGateway implements OnGatewayInit {
         try {
             const { nextQuiz, currentQuizResult } = await this.playService.playNextQuiz(
                 quizZoneId,
-                async () => {
-                    await this.broker.publish(quizZoneId, {event: 'quizTimeOut', sender: quizZoneId, data: undefined});
-                    this.server.emit('nextQuiz', quizZoneId);
-                },
+                this.quizTimeOut
             );
 
             await this.broker.publish(quizZoneId, {
@@ -157,6 +140,11 @@ export class PlayGateway implements OnGatewayInit {
         this.server.emit('summary', quizZoneId);
     }
 
+    private async quizTimeOut(quizZoneId: string) {
+        await this.broker.publish(quizZoneId, {event: 'quizTimeOut', sender: quizZoneId, data: undefined});
+        this.server.emit('nextQuiz', quizZoneId);
+    }
+
     /**
      * 클라이언트가 퀴즈 답안을 제출한 경우 호출됩니다.
      *
@@ -168,7 +156,7 @@ export class PlayGateway implements OnGatewayInit {
     async submit(
         @ConnectedSocket() client: WebSocketWithSession,
         @MessageBody() quizSubmit: QuizSubmitDto,
-    ): Promise<SendEventMessage<SubmitResponseDto>> {
+    ): Promise<SendEventMessage<PlayEvent, SubmitResponseDto>> {
         const { id, quizZoneId } = client.session;
 
         const {
@@ -189,7 +177,7 @@ export class PlayGateway implements OnGatewayInit {
 
         return {
             event: 'submit',
-            sender: id,
+            sender: quizZoneId,
             data: {
                 fastestPlayerIds, submittedCount, totalPlayerCount,
                 chatMessages: await this.chatService.get(quizZoneId)
@@ -203,11 +191,12 @@ export class PlayGateway implements OnGatewayInit {
      * @param quizZoneId - WebSocket 클라이언트
      */
     private async summary(quizZoneId: string) {
-        const summaries = await this.playService.summaryQuizZone(quizZoneId);
-        const endSocketTime = summaries[0].endSocketTime;
+        const summary = await this.playService.summaryQuizZone(quizZoneId);
+        const {endSocketTime} = summary;
 
-        summaries.map(async ({ id, score, submits, quizzes, ranks, endSocketTime }) => {
-            this.sendToClient(id, 'summary', { score, submits, quizzes, ranks, endSocketTime });
+        await this.broker.publish(quizZoneId, {
+            event: 'summary', sender: quizZoneId,
+            data: summary
         });
 
         this.clearQuizZone(quizZoneId, endSocketTime - Date.now());
@@ -237,7 +226,7 @@ export class PlayGateway implements OnGatewayInit {
      * @param client - WebSocket 클라이언트
      */
     @SubscribeMessage('leave')
-    async leave(@ConnectedSocket() client: WebSocketWithSession) {
+    async leave(@ConnectedSocket() client: WebSocketWithSession): Promise<SendEventMessage<PlayEvent, string>> {
         const { id, quizZoneId } = client.session;
 
         const { isHost } = await this.playService.leaveQuizZone(quizZoneId, id);
@@ -250,36 +239,59 @@ export class PlayGateway implements OnGatewayInit {
             await this.chatService.leave(quizZoneId, id);
         }
 
-        return { event: 'leave', data: 'OK' };
-    }
-
-    @SubscribeMessage('chat')
-    async chat(
-        @ConnectedSocket() client: WebSocketWithSession,
-        @MessageBody() message: ChatMessage,
-    ) {
-        await this.chatService.send(client.session.quizZoneId, message);
+        return { event: 'leave', sender: quizZoneId, data: 'OK' };
     }
 
     private async subscribePlay(quizZoneId: string, client: WebSocketWithSession) {
         const clientId = client.session.id;
 
-        this.clients.set(clientId, client);
-
         try {
             await this.broker.addPublisher(quizZoneId);
         } catch (error) {}
-        const unsubscribe = await this.broker.subscribe(
-            quizZoneId, clientId, async (message) => {
-            const {event, sender} = message;
 
-            if (sender !== clientId) {
-                client.send(JSON.stringify(message));
-            } else if (event === 'someone_leave') {
-                await unsubscribe();
-                this.clients.delete(clientId);
-                client.close();
+        const unsubscribe = await this.broker.subscribe(
+            quizZoneId,
+            clientId,
+            async (message) => {
+                const { event, sender, data } = message;
+
+                switch (event) {
+                    case "someone_join":
+                    case "someone_submit":
+                    case "changeNickname":
+                        if (sender === clientId) break;
+                        client.send(JSON.stringify(message));
+                        break;
+                    case "someone_leave":
+                        if (sender === clientId) {
+                            await unsubscribe();
+                            client.close();
+                        } else {
+                            client.send(JSON.stringify(message));
+                        }
+                        break;
+                    case "summary":
+                        const { players, quizzes, ranks, endSocketTime } = data;
+                        const player = players.get(clientId);
+
+                        if (player === undefined) break;
+
+                        const {score, submits } = player;
+
+                        client.send(JSON.stringify({event, data: {
+                            score, submits, quizzes, ranks, endSocketTime
+                        }}));
+
+                        break;
+                    case "start":
+                    case "nextQuiz":
+                    case "quizTimeOut":
+                    case "finish":
+                    case "close":
+                        client.send(JSON.stringify(message));
+                        break;
+                }
             }
-        });
+        );
     }
 }
