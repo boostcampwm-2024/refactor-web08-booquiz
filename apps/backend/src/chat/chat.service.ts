@@ -2,6 +2,7 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { ChatRepositoryMemory } from './repository/chat.memory.repository';
 import { ChatMessage, Player } from '@web08-booquiz/shared';
 import { Broker } from '../core/broker/interfaces/broker.interface';
+import { MessageWithTopic } from '../core/broker/interfaces/message-with-topic.interface';
 
 @Injectable()
 export class ChatService {
@@ -9,7 +10,7 @@ export class ChatService {
         @Inject('ChatRepository')
         private readonly chatRepository: ChatRepositoryMemory,
         @Inject('Broker')
-        private readonly broker: Broker<'chat' | 'leave', ChatMessage>
+        private readonly broker: Broker<MessageWithTopic<'chat' | 'leave', ChatMessage>>
     ) {
     }
 
