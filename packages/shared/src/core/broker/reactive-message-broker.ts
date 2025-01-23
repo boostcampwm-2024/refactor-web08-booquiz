@@ -45,7 +45,7 @@ export class ReactiveMessageBroker<TMessage> implements Broker<TMessage> {
 
         const subscription = publisher.subscribe({
             next: handler,
-            error: (error) => console.error(`Error in subscription ${publisherId}:${subscriberId} :`, error)
+            error: (error: any) => console.error(`Error in subscription ${publisherId}:${subscriberId} :`, error)
         });
 
         return async () => subscription.unsubscribe();
