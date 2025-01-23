@@ -3,7 +3,7 @@ import { PlayService } from './play.service';
 import { PlayGateway } from './play.gateway';
 import { QuizZoneModule } from '../quiz-zone/quiz-zone.module';
 import { ChatModule } from 'src/chat/chat.module';
-import { ReactiveMessageBroker } from '../core/broker/reactive-message-broker';
+import { ReactiveMessageBroker } from '@web08-booquiz/shared';
 
 @Module({
     imports: [QuizZoneModule, ChatModule],

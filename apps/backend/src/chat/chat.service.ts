@@ -1,8 +1,6 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { ChatRepositoryMemory } from './repository/chat.memory.repository';
-import { ChatMessage, Player } from '@web08-booquiz/shared';
-import { Broker } from '../core/broker/interfaces/broker.interface';
-import { MessageWithTopic } from '../core/broker/interfaces/message-with-topic.interface';
+import { Broker, ChatMessage, MessageWithTopic, Player } from '@web08-booquiz/shared';
 
 @Injectable()
 export class ChatService {

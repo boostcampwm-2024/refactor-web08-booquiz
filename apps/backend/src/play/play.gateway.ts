@@ -15,8 +15,7 @@ import { WebSocketWithSession } from '../core/SessionWsAdapter';
 import { RuntimeException } from '@nestjs/core/errors/exceptions';
 import { SubmitResponseDto } from './dto/submit-response.dto';
 import { ChatService } from '../chat/chat.service';
-import { ChatMessage, SendEventMessage } from '@web08-booquiz/shared';
-import { Broker } from '../core/broker/interfaces/broker.interface';
+import { Broker, ChatMessage, SendEventMessage } from '@web08-booquiz/shared';
 
 /**
  * 퀴즈 게임에 대한 WebSocket 연결을 관리하는 Gateway입니다.
