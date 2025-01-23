@@ -33,7 +33,7 @@ export class PlayGateway implements OnGatewayInit {
         private readonly playService: PlayService,
         private readonly chatService: ChatService,
         @Inject('Broker')
-        private readonly broker: Broker<string, SendEventMessage<any>>,
+        private readonly broker: Broker<SendEventMessage<any>>,
     ) {}
 
     /**
@@ -83,13 +83,11 @@ export class PlayGateway implements OnGatewayInit {
             client.send(JSON.stringify({event: 'chat', data: message}));
         });
 
-        await this.broker.publish(quizZoneId, { topic: id, data: {
-            event: 'someone_join',
-            data: { id, nickname }
-        }});
+        await this.broker.publish(quizZoneId, { event: 'someone_join', sender: id, data: {id, nickname} });
 
         return {
             event: 'join',
+            sender: id,
             data: players.map(({ id, nickname }) => ({ id, nickname }))
         };
     }
@@ -103,13 +101,11 @@ export class PlayGateway implements OnGatewayInit {
 
         await this.playService.changeNickname(quizZoneId, id, changedNickname);
 
-        await this.broker.publish(quizZoneId, {topic: id, data: {
-            event: 'changeNickname',
-            data: {id, changedNickname}
-        }});
+        await this.broker.publish(quizZoneId, {event: 'changeNickname', sender: id, data: {id, changedNickname}});
 
         return {
             event: 'changeNickname',
+            sender: id,
             data: 'OK',
         };
     }
@@ -125,10 +121,7 @@ export class PlayGateway implements OnGatewayInit {
 
         await this.playService.startQuizZone(quizZoneId, id);
 
-        await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {
-            event: 'start',
-            data: 'OK'
-        }});
+        await this.broker.publish(quizZoneId, {event: 'start', sender: quizZoneId, data: 'OK'});
 
         this.server.emit('nextQuiz', quizZoneId);
     }
@@ -143,18 +136,14 @@ export class PlayGateway implements OnGatewayInit {
             const { nextQuiz, currentQuizResult } = await this.playService.playNextQuiz(
                 quizZoneId,
                 async () => {
-                    await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {
-                            event: 'quizTimeOut',
-                            data: undefined,
-                        }});
+                    await this.broker.publish(quizZoneId, {event: 'quizTimeOut', sender: quizZoneId, data: undefined});
                     this.server.emit('nextQuiz', quizZoneId);
                 },
             );
 
-            await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {
-                event: 'nextQuiz',
-                data: { nextQuiz, currentQuizResult }
-            }});
+            await this.broker.publish(quizZoneId, {
+                event: 'nextQuiz', sender: quizZoneId, data: { nextQuiz, currentQuizResult }
+            });
         } catch (error) {
             if (error instanceof RuntimeException) {
                 await this.finishQuizZone(quizZoneId);
@@ -165,7 +154,7 @@ export class PlayGateway implements OnGatewayInit {
     }
 
     private async finishQuizZone(quizZoneId: string) {
-        await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {event: 'finish', data: undefined}});
+        await this.broker.publish(quizZoneId, {event: 'finish', sender: quizZoneId, data: undefined});
         this.server.emit('summary', quizZoneId);
     }
 
@@ -196,14 +185,12 @@ export class PlayGateway implements OnGatewayInit {
         if (isLastSubmit) {
             this.server.emit('nextQuiz', quizZoneId);
         } else {
-            await this.broker.publish(quizZoneId, {topic: id, data: {
-                event: 'someone_submit',
-                data: { id, submittedCount }
-            }});
+            await this.broker.publish(quizZoneId, {event: 'someone_submit', sender: id, data: { id, submittedCount }});
         }
 
         return {
             event: 'submit',
+            sender: id,
             data: {
                 fastestPlayerIds, submittedCount, totalPlayerCount,
                 chatMessages: await this.chatService.get(quizZoneId)
@@ -238,7 +225,7 @@ export class PlayGateway implements OnGatewayInit {
     private clearQuizZone(quizZoneId: string, time: number) {
         setTimeout(async () => {
             await this.playService.clearQuizZone(quizZoneId);
-            await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {event: 'close', data: undefined}});
+            await this.broker.publish(quizZoneId, {event: 'close', sender: quizZoneId, data: undefined});
             await this.chatService.delete(quizZoneId);
         }, time);
     }
@@ -257,10 +244,10 @@ export class PlayGateway implements OnGatewayInit {
         const { isHost } = await this.playService.leaveQuizZone(quizZoneId, id);
 
         if (isHost) {
-            await this.broker.publish(quizZoneId, {topic: id, data: {event: 'close', data: undefined}});
+            await this.broker.publish(quizZoneId, {event: 'close', sender: quizZoneId, data: undefined});
             this.clearQuizZone(quizZoneId, 0);
         } else {
-            await this.broker.publish(quizZoneId, {topic: id, data: {event: 'someone_leave', data: undefined}});
+            await this.broker.publish(quizZoneId, {event: 'someone_leave', sender: id, data: undefined});
             await this.chatService.leave(quizZoneId, id);
         }
 
@@ -285,11 +272,11 @@ export class PlayGateway implements OnGatewayInit {
         } catch (error) {}
         const unsubscribe = await this.broker.subscribe(
             quizZoneId, clientId, async (message) => {
-            const {topic, data} = message;
+            const {event, sender} = message;
 
-            if (topic !== clientId) {
-                client.send(JSON.stringify(data));
-            } else if (data.event === 'someone_leave') {
+            if (sender !== clientId) {
+                client.send(JSON.stringify(message));
+            } else if (event === 'someone_leave') {
                 await unsubscribe();
                 this.clients.delete(clientId);
                 client.close();

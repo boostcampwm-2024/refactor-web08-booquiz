@@ -6,5 +6,6 @@
  */
 export interface SendEventMessage<T> {
     event: string;
+    sender: string;
     data: T;
 }
