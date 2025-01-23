@@ -1,10 +1,10 @@
 import { Subject } from 'rxjs';
-import { Message } from './interfaces/message.interface';
 import { Broker } from './interfaces/broker.interface';
+import { MessageHandler } from './types';
 
-export class ReactiveMessageBroker<TTopic, TData> implements Broker<TTopic, TData> {
+export class ReactiveMessageBroker<TMessage> implements Broker<TMessage> {
     constructor(
-        private publishers: Map<string, Subject<Message<TTopic, TData>>> = new Map(),
+        private publishers: Map<string, Subject<TMessage>> = new Map(),
     ) {}
 
     public async addPublisher(id: string) {
@@ -12,7 +12,7 @@ export class ReactiveMessageBroker<TTopic, TData> implements Broker<TTopic, TDat
             throw new Error(`Publisher with ID ${id} already exists`);
         }
 
-        this.publishers.set(id, new Subject<Message<TTopic, TData>>());
+        this.publishers.set(id, new Subject<TMessage>());
     }
 
     public async removePublisher(id: string) {
@@ -25,7 +25,7 @@ export class ReactiveMessageBroker<TTopic, TData> implements Broker<TTopic, TDat
         this.publishers.delete(id);
     }
 
-    public async publish(id: string, message: Message<TTopic, TData>) {
+    public async publish(id: string, message: TMessage) {
         const publisher = this.publishers.get(id);
 
         if (!publisher) {
@@ -35,10 +35,7 @@ export class ReactiveMessageBroker<TTopic, TData> implements Broker<TTopic, TDat
         publisher.next(message);
     }
 
-    public async subscribe(
-        publisherId: string,
-        subscriberId: string,
-        handler: (message: Message<TTopic, TData>) => void
+    public async subscribe(publisherId: string, subscriberId: string, handler: MessageHandler<TMessage>
     ) {
         const publisher = this.publishers.get(publisherId);
 

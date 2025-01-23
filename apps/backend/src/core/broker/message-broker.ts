@@ -1,29 +1,28 @@
 import { Broker } from './interfaces/broker.interface';
-import { Message } from './interfaces/message.interface';
 import { MessageHandler } from './types';
 
-export class MessageBroker<TTopic, TData> implements Broker<TTopic, TData> {
+export class MessageBroker<TMessage> implements Broker<TMessage> {
     constructor(
-        private readonly publishers: Map<string, Map<string, MessageHandler<TTopic, TData>>> = new Map(),
+        private readonly subscribers: Map<string, Map<string, MessageHandler<TMessage>>> = new Map(),
     ) {}
 
     public async addPublisher(id: string) {
-        if (this.publishers.has(id)) {
+        if (this.subscribers.has(id)) {
             throw new Error(`Publisher with ID ${id} already exists`);
         }
 
-        this.publishers.set(id, new Map());
+        this.subscribers.set(id, new Map());
     }
 
     public async removePublisher(id: string) {
-        if (!this.publishers.has(id)) {
+        if (!this.subscribers.has(id)) {
             throw new Error(`Publisher with ID ${id} does not exist`);
         }
 
-        this.publishers.delete(id);
+        this.subscribers.delete(id);
     }
 
-    public async publish(id: string, message: Message<TTopic, TData>) {
+    public async publish(id: string, message: TMessage) {
         const subscribers = this.getSubscribers(id);
 
         if (subscribers === undefined) {
@@ -33,7 +32,7 @@ export class MessageBroker<TTopic, TData> implements Broker<TTopic, TData> {
         await Promise.all([...subscribers.values()].map(handler => handler(message)));
     }
 
-    public async subscribe(publisherId: string, subscriberId: string, handler: MessageHandler<TTopic, TData>) {
+    public async subscribe(publisherId: string, subscriberId: string, handler: MessageHandler<TMessage>) {
         const subscribers = this.getSubscribers(publisherId);
         subscribers.set(subscriberId, handler);
         return () => this.unsubscribe(publisherId, subscriberId);
@@ -45,9 +44,9 @@ export class MessageBroker<TTopic, TData> implements Broker<TTopic, TData> {
     }
 
     private getSubscribers(id: string) {
-        if (!this.publishers.has(id)) {
+        if (!this.subscribers.has(id)) {
             throw new Error(`Publisher with ID ${id} does not exist`);
         }
-        return this.publishers.get(id);
+        return this.subscribers.get(id);
     }
 }
