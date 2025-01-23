@@ -3,7 +3,7 @@ import { PlayService } from './play.service';
 import { PlayGateway } from './play.gateway';
 import { QuizZoneModule } from '../quiz-zone/quiz-zone.module';
 import { ChatModule } from 'src/chat/chat.module';
-import { ReactiveMessageBroker } from '../core/pub-sub/reactive-message-broker';
+import { ReactiveMessageBroker } from '../core/broker/reactive-message-broker';
 
 @Module({
     imports: [QuizZoneModule, ChatModule],
@@ -18,7 +18,7 @@ import { ReactiveMessageBroker } from '../core/pub-sub/reactive-message-broker';
             useValue: new Map(),
         },
         {
-            provide: 'PubSub',
+            provide: 'Broker',
             useValue: new ReactiveMessageBroker,
         },
         PlayService,

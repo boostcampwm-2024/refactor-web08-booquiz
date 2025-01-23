@@ -1,8 +1,8 @@
 import { Subject } from 'rxjs';
 import { Message } from './interfaces/message.interface';
-import { PubSub } from './interfaces/pub-sub.interface';
+import { Broker } from './interfaces/broker.interface';
 
-export class ReactiveMessageBroker<TTopic, TData> implements PubSub<TTopic, TData> {
+export class ReactiveMessageBroker<TTopic, TData> implements Broker<TTopic, TData> {
     constructor(
         private publishers: Map<string, Subject<Message<TTopic, TData>>> = new Map(),
     ) {}

@@ -3,7 +3,7 @@ import { MessageHandler } from '../types';
 
 type Unsubscribe = () => Promise<void>;
 
-export interface PubSub<TTopic, TData> {
+export interface Broker<TTopic, TData> {
     subscribe(publisherId: string, subscriberId: string, handler: MessageHandler<TTopic, TData>): Promise<Unsubscribe>;
 
     addPublisher(publisherId: string): Promise<void>;

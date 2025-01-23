@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ChatController } from './chat.controller';
 import { ChatRepositoryMemory } from './repository/chat.memory.repository';
 import { ChatService } from './chat.service';
-import { ReactiveMessageBroker } from '../core/pub-sub/reactive-message-broker';
+import { ReactiveMessageBroker } from '../core/broker/reactive-message-broker';
 
 @Module({
     controllers: [ChatController],
@@ -17,7 +17,7 @@ import { ReactiveMessageBroker } from '../core/pub-sub/reactive-message-broker';
             useClass: ChatRepositoryMemory,
         },
         {
-            provide: 'PubSub',
+            provide: 'Broker',
             useClass: ReactiveMessageBroker,
         }
     ],

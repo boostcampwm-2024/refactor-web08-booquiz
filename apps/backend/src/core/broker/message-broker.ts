@@ -1,8 +1,8 @@
-import { PubSub } from './interfaces/pub-sub.interface';
+import { Broker } from './interfaces/broker.interface';
 import { Message } from './interfaces/message.interface';
 import { MessageHandler } from './types';
 
-export class MessageBroker<TTopic, TData> implements PubSub<TTopic, TData> {
+export class MessageBroker<TTopic, TData> implements Broker<TTopic, TData> {
     constructor(
         private readonly publishers: Map<string, Map<string, MessageHandler<TTopic, TData>>> = new Map(),
     ) {}

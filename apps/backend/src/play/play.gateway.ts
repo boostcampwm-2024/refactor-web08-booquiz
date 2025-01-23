@@ -16,7 +16,7 @@ import { RuntimeException } from '@nestjs/core/errors/exceptions';
 import { SubmitResponseDto } from './dto/submit-response.dto';
 import { ChatService } from '../chat/chat.service';
 import { ChatMessage, SendEventMessage } from '@web08-booquiz/shared';
-import { PubSub } from '../core/pub-sub/interfaces/pub-sub.interface';
+import { Broker } from '../core/broker/interfaces/broker.interface';
 
 /**
  * 퀴즈 게임에 대한 WebSocket 연결을 관리하는 Gateway입니다.
@@ -32,8 +32,8 @@ export class PlayGateway implements OnGatewayInit {
         private readonly clients: Map<String, WebSocketWithSession>,
         private readonly playService: PlayService,
         private readonly chatService: ChatService,
-        @Inject('PubSub')
-        private readonly pubSub: PubSub<string, SendEventMessage<any>>,
+        @Inject('Broker')
+        private readonly broker: Broker<string, SendEventMessage<any>>,
     ) {}
 
     /**
@@ -83,7 +83,7 @@ export class PlayGateway implements OnGatewayInit {
             client.send(JSON.stringify({event: 'chat', data: message}));
         });
 
-        await this.pubSub.publish(quizZoneId, { topic: id, data: {
+        await this.broker.publish(quizZoneId, { topic: id, data: {
             event: 'someone_join',
             data: { id, nickname }
         }});
@@ -103,7 +103,7 @@ export class PlayGateway implements OnGatewayInit {
 
         await this.playService.changeNickname(quizZoneId, id, changedNickname);
 
-        await this.pubSub.publish(quizZoneId, {topic: id, data: {
+        await this.broker.publish(quizZoneId, {topic: id, data: {
             event: 'changeNickname',
             data: {id, changedNickname}
         }});
@@ -125,7 +125,7 @@ export class PlayGateway implements OnGatewayInit {
 
         await this.playService.startQuizZone(quizZoneId, id);
 
-        await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {
+        await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {
             event: 'start',
             data: 'OK'
         }});
@@ -143,7 +143,7 @@ export class PlayGateway implements OnGatewayInit {
             const { nextQuiz, currentQuizResult } = await this.playService.playNextQuiz(
                 quizZoneId,
                 async () => {
-                    await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {
+                    await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {
                             event: 'quizTimeOut',
                             data: undefined,
                         }});
@@ -151,7 +151,7 @@ export class PlayGateway implements OnGatewayInit {
                 },
             );
 
-            await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {
+            await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {
                 event: 'nextQuiz',
                 data: { nextQuiz, currentQuizResult }
             }});
@@ -165,7 +165,7 @@ export class PlayGateway implements OnGatewayInit {
     }
 
     private async finishQuizZone(quizZoneId: string) {
-        await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {event: 'finish', data: undefined}});
+        await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {event: 'finish', data: undefined}});
         this.server.emit('summary', quizZoneId);
     }
 
@@ -196,7 +196,7 @@ export class PlayGateway implements OnGatewayInit {
         if (isLastSubmit) {
             this.server.emit('nextQuiz', quizZoneId);
         } else {
-            await this.pubSub.publish(quizZoneId, {topic: id, data: {
+            await this.broker.publish(quizZoneId, {topic: id, data: {
                 event: 'someone_submit',
                 data: { id, submittedCount }
             }});
@@ -238,7 +238,7 @@ export class PlayGateway implements OnGatewayInit {
     private clearQuizZone(quizZoneId: string, time: number) {
         setTimeout(async () => {
             await this.playService.clearQuizZone(quizZoneId);
-            await this.pubSub.publish(quizZoneId, {topic: quizZoneId, data: {event: 'close', data: undefined}});
+            await this.broker.publish(quizZoneId, {topic: quizZoneId, data: {event: 'close', data: undefined}});
             await this.chatService.delete(quizZoneId);
         }, time);
     }
@@ -257,10 +257,10 @@ export class PlayGateway implements OnGatewayInit {
         const { isHost } = await this.playService.leaveQuizZone(quizZoneId, id);
 
         if (isHost) {
-            await this.pubSub.publish(quizZoneId, {topic: id, data: {event: 'close', data: undefined}});
+            await this.broker.publish(quizZoneId, {topic: id, data: {event: 'close', data: undefined}});
             this.clearQuizZone(quizZoneId, 0);
         } else {
-            await this.pubSub.publish(quizZoneId, {topic: id, data: {event: 'someone_leave', data: undefined}});
+            await this.broker.publish(quizZoneId, {topic: id, data: {event: 'someone_leave', data: undefined}});
             await this.chatService.leave(quizZoneId, id);
         }
 
@@ -281,9 +281,9 @@ export class PlayGateway implements OnGatewayInit {
         this.clients.set(clientId, client);
 
         try {
-            await this.pubSub.addPublisher(quizZoneId);
+            await this.broker.addPublisher(quizZoneId);
         } catch (error) {}
-        const unsubscribe = await this.pubSub.subscribe(
+        const unsubscribe = await this.broker.subscribe(
             quizZoneId, clientId, async (message) => {
             const {topic, data} = message;
 

@@ -1,21 +1,21 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { ChatRepositoryMemory } from './repository/chat.memory.repository';
 import { ChatMessage, Player } from '@web08-booquiz/shared';
-import { PubSub } from '../core/pub-sub/interfaces/pub-sub.interface';
+import { Broker } from '../core/broker/interfaces/broker.interface';
 
 @Injectable()
 export class ChatService {
     constructor(
         @Inject('ChatRepository')
         private readonly chatRepository: ChatRepositoryMemory,
-        @Inject('PubSub')
-        private readonly pubSub: PubSub<'chat' | 'leave', ChatMessage>
+        @Inject('Broker')
+        private readonly broker: Broker<'chat' | 'leave', ChatMessage>
     ) {
     }
 
     async set(id: string) {
         await this.chatRepository.set(id);
-        await this.pubSub.addPublisher(id);
+        await this.broker.addPublisher(id);
     }
 
     async get(id: string) {
@@ -27,11 +27,11 @@ export class ChatService {
 
     async delete(id: string) {
         await this.chatRepository.delete(id);
-        await this.pubSub.removePublisher(id);
+        await this.broker.removePublisher(id);
     }
 
     async join(chatId: string, player: Player, handleSendMessage: (data: ChatMessage) => void) {
-        const unsubscribe = await this.pubSub.subscribe(chatId, player.id, async (message) => {
+        const unsubscribe = await this.broker.subscribe(chatId, player.id, async (message) => {
             const { topic, data } = message;
             const { clientId } = data;
 
@@ -48,14 +48,14 @@ export class ChatService {
     }
 
     async send(chatId: string, chatMessage: ChatMessage) {
-        await this.pubSub.publish(chatId, {
+        await this.broker.publish(chatId, {
             topic: 'chat',
             data: chatMessage,
         });
     }
 
     async leave(chatId: string, clientId: string) {
-        await this.pubSub.publish(chatId, {
+        await this.broker.publish(chatId, {
             topic: 'leave',
             data: {
                 clientId,
