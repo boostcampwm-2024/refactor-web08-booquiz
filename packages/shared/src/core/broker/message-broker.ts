@@ -3,27 +3,27 @@ import { MessageHandler } from './types';
 
 export class MessageBroker<TMessage> implements Broker<TMessage> {
     constructor(
-        private readonly subscribers: Map<string, Map<string, MessageHandler<TMessage>>> = new Map(),
+        private readonly publishers: Map<string, Map<string, MessageHandler<TMessage>>> = new Map(),
     ) {}
 
     public async addPublisher(id: string) {
-        if (this.subscribers.has(id)) {
+        if (this.publishers.has(id)) {
             throw new Error(`Publisher with ID ${id} already exists`);
         }
 
-        this.subscribers.set(id, new Map());
+        this.publishers.set(id, new Map());
     }
 
     public async removePublisher(id: string) {
-        if (!this.subscribers.has(id)) {
+        if (!this.publishers.has(id)) {
             throw new Error(`Publisher with ID ${id} does not exist`);
         }
 
-        this.subscribers.delete(id);
+        this.publishers.delete(id);
     }
 
     public async publish(id: string, message: TMessage) {
-        const subscribers = this.getSubscribers(id);
+        const subscribers = this.publishers.get(id);
 
         if (subscribers === undefined) {
             throw new Error(`Publisher with ID ${id} does not exist`);
@@ -33,20 +33,24 @@ export class MessageBroker<TMessage> implements Broker<TMessage> {
     }
 
     public async subscribe(publisherId: string, subscriberId: string, handler: MessageHandler<TMessage>) {
-        const subscribers = this.getSubscribers(publisherId);
+        const subscribers = this.publishers.get(publisherId);
+
+        if (subscribers === undefined) {
+            throw new Error(`Publisher with ID ${publisherId} does not exist`);
+        }
+
         subscribers.set(subscriberId, handler);
+
         return () => this.unsubscribe(publisherId, subscriberId);
     }
 
     private async unsubscribe(publisherId: string, subscriberId: string) {
-        const subscribers = this.getSubscribers(publisherId);
-        subscribers.delete(subscriberId);
-    }
+        const subscribers = this.publishers.get(publisherId);
 
-    private getSubscribers(id: string) {
-        if (!this.subscribers.has(id)) {
-            throw new Error(`Publisher with ID ${id} does not exist`);
+        if (subscribers === undefined) {
+            throw new Error(`Publisher with ID ${publisherId} does not exist`);
         }
-        return this.subscribers.get(id);
+
+        subscribers.delete(subscriberId);
     }
 }
