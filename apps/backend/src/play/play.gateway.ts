@@ -259,7 +259,6 @@ export class PlayGateway implements OnGatewayInit {
 
         const unsubscribe = await this.broker.subscribe(
             quizZoneId,
-            clientId,
             async (message) => {
                 const { event, sender, data } = message;
 
@@ -273,6 +272,7 @@ export class PlayGateway implements OnGatewayInit {
                     case "someone_leave":
                         if (sender === clientId) {
                             await unsubscribe();
+                            await this.chatService.leave(clientId, clientId);
                             client.close();
                         } else {
                             client.send(JSON.stringify(message));

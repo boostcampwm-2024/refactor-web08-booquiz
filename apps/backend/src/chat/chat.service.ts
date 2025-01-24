@@ -30,7 +30,7 @@ export class ChatService {
     }
 
     async join(chatId: string, player: Player, handleSendMessage: (data: ChatMessage) => void) {
-        const unsubscribe = await this.broker.subscribe(chatId, player.id, async (message) => {
+        const unsubscribe = await this.broker.subscribe(chatId, async (message) => {
             const { topic, data } = message;
             const { clientId } = data;
 
