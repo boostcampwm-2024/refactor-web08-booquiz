@@ -35,7 +35,7 @@ export class ReactiveMessageBroker<TMessage> implements Broker<TMessage> {
         publisher.next(message);
     }
 
-    public async subscribe(publisherId: string, subscriberId: string, handler: MessageHandler<TMessage>
+    public async subscribe(publisherId: string, handler: MessageHandler<TMessage>
     ) {
         const publisher = this.publishers.get(publisherId);
 
@@ -45,7 +45,7 @@ export class ReactiveMessageBroker<TMessage> implements Broker<TMessage> {
 
         const subscription = publisher.subscribe({
             next: handler,
-            error: (error: any) => console.error(`Error in subscription ${publisherId}:${subscriberId} :`, error)
+            error: (error: any) => console.error(`Error in subscription ${publisherId} :`, error)
         });
 
         return async () => subscription.unsubscribe();
