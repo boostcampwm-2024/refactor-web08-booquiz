@@ -25,22 +25,22 @@ export class PlayService {
         @Inject('PlayInfoStorage') private readonly plays: Map<string, NodeJS.Timeout>,
     ) {}
 
-    async joinQuizZone(quizZoneId: string, sessionId: string) {
+    async joinQuizZone(quizZoneId: string, playerId: string) {
         const { players } = await this.quizZoneService.findOne(quizZoneId);
 
-        if (!players.has(sessionId)) {
+        if (!players.has(playerId)) {
             throw new NotFoundException('참여하지 않은 사용자입니다.');
         }
 
         return {
-            currentPlayer: players.get(sessionId),
+            currentPlayer: players.get(playerId),
             players: [...players.values()],
         };
     }
 
     async startQuizZone(quizZoneId: string, clientId: string) {
         const quizZone = await this.quizZoneService.findOne(quizZoneId);
-        const { hostId, stage, players } = quizZone;
+        const { hostId, stage } = quizZone;
 
         if (hostId !== clientId) {
             throw new UnauthorizedException('방장만 퀴즈를 시작할 수 있습니다.');
@@ -54,8 +54,6 @@ export class PlayService {
             ...quizZone,
             stage: QUIZ_ZONE_STAGE.IN_PROGRESS,
         });
-
-        return [...players.values()].map((player) => player.id);
     }
 
     /**
@@ -304,22 +302,15 @@ export class PlayService {
         const now = Date.now();
         const endSocketTime = now + socketConnectTime;
 
-
-        const summaries = [...players.values()].map(({ id, score, submits }) => ({
-            id,
-            score,
-            submits,
-            quizzes,
-            ranks,
-            endSocketTime
-        }));
-
         quizZone.summaries  = {ranks, endSocketTime};
-        return summaries;
+
+        return {
+            players, quizzes, ranks, endSocketTime,
+        }
     }
 
-    public clearQuizZone(quizZoneId: string) {
-        this.quizZoneService.clearQuizZone(quizZoneId);
+    public async clearQuizZone(quizZoneId: string) {
+        return this.quizZoneService.clearQuizZone(quizZoneId);
     }
 
     private calculateQuizRanks(

@@ -12,6 +12,7 @@ import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { QuizZoneService } from './quiz-zone.service';
 import { ChatService } from '../chat/chat.service';
 import { CreateQuizZoneDto } from './dto/create-quiz-zone.dto';
+import { SessionWithQuizZone } from '../core/SessionWsAdapter';
 
 @ApiTags('Quiz Zone')
 @Controller('quiz-zone')
@@ -28,14 +29,16 @@ export class QuizZoneController {
     @ApiResponse({ status: 400, description: '세션 정보가 없습니다.' })
     async create(
         @Body() createQuizZoneDto: CreateQuizZoneDto,
-        @Session() session: Record<string, any>,
+        @Session() session: SessionWithQuizZone,
     ): Promise<void> {
         if (!session || !session.id) {
             throw new BadRequestException('세션 정보가 없습니다.');
         }
+        const { quizZoneId } = createQuizZoneDto;
         const hostId = session.id;
+
         await this.quizZoneService.create(createQuizZoneDto, hostId);
-        await this.chatService.set(createQuizZoneDto.quizZoneId);
+        await this.chatService.set(quizZoneId);
     }
 
     @Get('check/:quizZoneId')
@@ -48,7 +51,7 @@ export class QuizZoneController {
     })
     @ApiResponse({ status: 400, description: '세션 정보가 없습니다.' })
     async checkExistingQuizZoneParticipation(
-        @Session() session: Record<string, any>,
+        @Session() session: SessionWithQuizZone,
         @Param('quizZoneId') quizZoneId: string,
     ) {
         const sessionQuizZoneId = session.quizZoneId;
@@ -65,7 +68,7 @@ export class QuizZoneController {
     })
     @ApiResponse({ status: 400, description: '세션 정보가 없습니다.' })
     async findQuizZoneInfo(
-        @Session() session: Record<string, any>,
+        @Session() session: SessionWithQuizZone,
         @Param('quizZoneId') quizZoneId: string,
     ) {
         const serverTime = Date.now();
@@ -74,7 +77,9 @@ export class QuizZoneController {
             quizZoneId,
             session.quizZoneId,
         );
-        session['quizZoneId'] = quizZoneId;
+
+        session.quizZoneId = quizZoneId;
+
         return {
             ...quizZoneInfo,
             serverTime,

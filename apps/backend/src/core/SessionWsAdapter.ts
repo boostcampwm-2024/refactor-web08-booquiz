@@ -3,8 +3,12 @@ import { RequestHandler } from 'express';
 import { NestApplication } from '@nestjs/core';
 import { Session } from 'express-session';
 
+export interface SessionWithQuizZone extends Session {
+    quizZoneId?: string;
+}
+
 export interface WebSocketWithSession extends WebSocket {
-    session: Session;
+    session: SessionWithQuizZone;
 }
 
 export class SessionWsAdapter extends WsAdapter {

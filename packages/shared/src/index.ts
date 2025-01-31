@@ -26,3 +26,4 @@ export * from './entities/quiz-zone.entity';
 export * from './entities/rank.entity';
 export * from './entities/submitted-quiz.entity';
 export * from './interfaces/send-event.interface';
+export * from './core/broker/index';
