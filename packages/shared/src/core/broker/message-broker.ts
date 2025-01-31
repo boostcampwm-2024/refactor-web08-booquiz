@@ -2,14 +2,14 @@ import { Broker } from './interfaces/broker.interface';
 import { MessageHandler } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
-export interface Subscriber<TMessage> {
-    id: string;
-    handler: MessageHandler<TMessage>;
+export interface Subscription<TMessage> {
+    readonly id: string;
+    readonly handler: MessageHandler<TMessage>;
 }
 
 export class MessageBroker<TMessage> implements Broker<TMessage> {
     constructor(
-        private readonly publishers: Map<string, Subscriber<TMessage>[]> = new Map(),
+        private readonly publishers: Map<string, Subscription<TMessage>[]> = new Map(),
     ) {}
 
     public async addPublisher(id: string) {
@@ -29,35 +29,35 @@ export class MessageBroker<TMessage> implements Broker<TMessage> {
     }
 
     public async publish(id: string, message: TMessage) {
-        const subscribers = this.publishers.get(id);
+        const subscriptions = this.publishers.get(id);
 
-        if (subscribers === undefined) {
+        if (subscriptions === undefined) {
             throw new Error(`Publisher with ID ${id} does not exist`);
         }
 
-        await Promise.all(subscribers.map((subscriber) => subscriber.handler(message)));
+        await Promise.all(subscriptions.map((subscriber) => subscriber.handler(message)));
     }
 
     public async subscribe(publisherId: string, handler: MessageHandler<TMessage>) {
-        const subscribers = this.publishers.get(publisherId);
+        const subscriptions = this.publishers.get(publisherId);
 
-        if (subscribers === undefined) {
+        if (subscriptions === undefined) {
             throw new Error(`Publisher with ID ${publisherId} does not exist`);
         }
 
-        const subscriberId = uuidv4();
-        this.publishers.set(publisherId, [...subscribers, {id: subscriberId, handler}]);
+        const subscriptionId = uuidv4();
+        this.publishers.set(publisherId, [...subscriptions, {id: subscriptionId, handler}]);
 
-        return () => this.unsubscribe(publisherId, subscriberId);
+        return () => this.unsubscribe(publisherId, subscriptionId);
     }
 
-    private async unsubscribe(publisherId: string, subscriberId: string) {
-        const subscribers = this.publishers.get(publisherId);
+    private async unsubscribe(publisherId: string, subscriptionId: string) {
+        const subscriptions = this.publishers.get(publisherId);
 
-        if (subscribers === undefined) {
+        if (subscriptions === undefined) {
             throw new Error(`Publisher with ID ${publisherId} does not exist`);
         }
 
-        this.publishers.set(publisherId, subscribers.filter((subscriber) => subscriber.id !== subscriberId));
+        this.publishers.set(publisherId, subscriptions.filter((subscription) => subscription.id !== subscriptionId));
     }
 }
